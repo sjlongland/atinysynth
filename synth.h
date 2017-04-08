@@ -45,7 +45,7 @@ extern const uint16_t __attribute__((weak)) synth_freq;
  */
 struct poly_synth_t {
 	/*! Pointer to voices.  There may be up to 16 voices referenced. */
-	struct voice_ch_t* const voice;
+	struct voice_ch_t* voice;
 	/*!
 	 * Bit-field enabling given voices.  This allows selective turning
 	 * on and off of given voice channels.  If the corresponding bit is
