@@ -14,28 +14,29 @@ OBJDIR ?= obj/$(PORT)
 
 SRCDIR ?= $(PWD)
 
-.PHONY: setfuse all clean prepare
+.PHONY: setfuse all clean
 
 -include local.mk
-
-all: $(TARGET)
-
-prepare:
-	for d in $(OBJDIR) $(BINDIR); do \
-		[ -d $$d ] || mkdir -p $$d; \
-	done
+include $(PORTDIR)/Makefile
 
 $(BINDIR)/synth: $(OBJDIR)/main.o $(OBJDIR)/poly.a
+	@[ -d $(BINDIR) ] || mkdir -p $(BINDIR)
 	$(CC) -g -o $@ $(LDFLAGS) $(LIBS) $^
 
 $(OBJDIR)/poly.a: $(OBJDIR)/adsr.o $(OBJDIR)/waveform.o
 	$(AR) rcs $@ $^
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c prepare
+$(OBJDIR)/%.o $(OBJDIR)/%.o.dep: $(SRCDIR)/%.c
+	@[ -d $(OBJDIR) ] || mkdir -p $(OBJDIR)
 	$(CC) -o $@ -c $(CPPFLAGS) $(INCLUDES) $(CFLAGS) $<
+	$(CC) -MM $(CPPFLAGS) $(INCLUDES) $< \
+		| sed -e '/^[^ ]\+:/ s:^:$(OBJDIR)/:g' > $@.dep
 
-$(OBJDIR)/%.o: $(PORTDIR)/%.c prepare
+$(OBJDIR)/%.o $(OBJDIR)/%.o.dep: $(PORTDIR)/%.c
+	@[ -d $(OBJDIR) ] || mkdir -p $(OBJDIR)
 	$(CC) -o $@ -c $(CPPFLAGS) $(INCLUDES) $(CFLAGS) $<
+	$(CC) -MM $(CPPFLAGS) $(INCLUDES) $< \
+		| sed -e '/^[^ ]\+:/ s:^:$(OBJDIR)/:g' > $@.dep
 
 clean:
 	-rm -fr $(OBJDIR) $(BINDIR)
@@ -43,4 +44,4 @@ clean:
 $(BINDIR)/%.ihex: $(BINDIR)/%
 	$(OBJCOPY) -j .text -j .data -O ihex $^ $@
 
-include $(PORTDIR)/Makefile
+-include $(OBJDIR)/*.dep
