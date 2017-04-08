@@ -16,12 +16,8 @@ EFUSE=0xff
 FREQ=16000000
 
 all: $(TARGET)
-
-$(BINDIR)/%.pgm: $(BINDIR)/%.ihex
-	$(PROG) $(PROG_ARGS) -p $(PROG_DEV) -U flash:w:$^:i
-
-setfuse:
-	$(PROG) $(PROG_ARGS) -p $(PROG_DEV) \
+program: $(BINDIR)/synth.ihex
+	$(PROG) $(PROG_ARGS) -p $(PROG_DEV) -U flash:w:$^:i \
 		-U lfuse:w:$(LFUSE):m \
 		-U hfuse:w:$(HFUSE):m \
 		-U efuse:w:$(EFUSE):m 
