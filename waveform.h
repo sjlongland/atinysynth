@@ -22,7 +22,7 @@
 #include <stdint.h>
 
 /*!
- * Waveform generator state.  10 bytes.
+ * Waveform generator state.  12 bytes.
  */
 struct voice_wf_gen_t {
 	/*! Waveform output sample in fixed-point */
@@ -37,7 +37,8 @@ struct voice_wf_gen_t {
 	 */
 	uint16_t period;
 	/*! Amplitude step for TRIANGLE and SAWTOOTH */
-	int8_t step;
+	int16_t step;
+	uint8_t reserved;
 	/*! Waveform generation mode */
 	uint8_t mode;
 };

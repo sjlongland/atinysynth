@@ -135,11 +135,16 @@ void voice_wf_set_square(struct voice_wf_gen_t* const wf_gen,
 void voice_wf_set_sawtooth(struct voice_wf_gen_t* const wf_gen,
 		uint16_t freq, int8_t amplitude) {
 	wf_gen->mode = VOICE_MODE_SAWTOOTH;
-	wf_gen->sample = (int16_t)amplitude << VOICE_WF_AMP_SCALE;
+	wf_gen->sample = -(int16_t)amplitude << VOICE_WF_AMP_SCALE;
 	wf_gen->period = voice_wf_calc_sawtooth_period(freq);
 	wf_gen->period_remain = wf_gen->period;
-	wf_gen->amplitude = -wf_gen->sample;
+	wf_gen->amplitude = wf_gen->sample;
 	wf_gen->step = ((int32_t)(wf_gen->amplitude << 1)) / wf_gen->period;
+	_DPRINTF("wf=%p INIT mode=SAWTOOTH amp=%d per=%d step=%d rem=%d "
+			"→ sample=%d\n",
+			wf_gen, wf_gen->amplitude, wf_gen->period,
+			wf_gen->step, wf_gen->period_remain,
+			wf_gen->sample);
 }
 
 void voice_wf_set_triangle(struct voice_wf_gen_t* const wf_gen,
