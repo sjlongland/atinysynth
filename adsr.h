@@ -37,6 +37,7 @@
 #define ADSR_STATE_RELEASE_INIT		(0x50)
 #define ADSR_STATE_RELEASE		(0x51)
 #define ADSR_STATE_RELEASE_EXPIRE	(0x5f)
+#define ADSR_STATE_DONE			(0xff)
 
 /*!
  * ADSR Envelope Generator data.  20 bytes.
@@ -71,7 +72,7 @@ struct adsr_env_gen_t {
 };
 
 /*!
- * Reset the ADSR state ready for the next note
+ * Reset the ADSR state.
  */
 void adsr_reset(struct adsr_env_gen_t* const adsr);
 
