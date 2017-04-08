@@ -20,6 +20,7 @@
 
 #include "waveform.h"
 #include "synth.h"
+#include "debug.h"
 #include <stdlib.h>
 
 /* Waveform generation modes */
@@ -35,11 +36,16 @@
 int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 	switch(wf_gen->mode) {
 		case VOICE_MODE_DC:
+			_DPRINTF("wf=%p mode=DC amp=%d\n",
+					wf_gen, wf_gen->amplitude);
 			return wf_gen->amplitude;
 		case VOICE_MODE_NOISE:
 			wf_gen->sample = (rand() /
 				(RAND_MAX/512)) - 256;
 			wf_gen->sample *= wf_gen->amplitude;
+			_DPRINTF("wf=%p mode=NOISE amp=%d → sample=%d\n",
+					wf_gen, wf_gen->amplitude,
+					wf_gen->sample);
 			break;
 		case VOICE_MODE_SQUARE:
 			if (!wf_gen->period_remain) {
@@ -49,6 +55,11 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 			} else {
 				wf_gen->period_remain--;
 			}
+			_DPRINTF("wf=%p mode=SQUARE amp=%d rem=%d "
+					"→ sample=%d\n",
+					wf_gen, wf_gen->amplitude,
+					wf_gen->period_remain,
+					wf_gen->sample);
 			break;
 		case VOICE_MODE_SAWTOOTH:
 			if (!wf_gen->period_remain) {
@@ -60,6 +71,11 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 				wf_gen->sample += wf_gen->step;
 				wf_gen->period_remain--;
 			}
+			_DPRINTF("wf=%p mode=SAWTOOTH amp=%d rem=%d step=%d "
+					"→ sample=%d\n",
+					wf_gen, wf_gen->amplitude,
+					wf_gen->period_remain, wf_gen->step,
+					wf_gen->sample);
 			break;
 		case VOICE_MODE_TRIANGLE:
 			if (!wf_gen->period_remain) {
@@ -74,6 +90,11 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 				wf_gen->sample += wf_gen->step;
 				wf_gen->period_remain--;
 			}
+			_DPRINTF("wf=%p mode=SQUARE amp=%d rem=%d step=%d "
+					"→ sample=%d\n",
+					wf_gen, wf_gen->amplitude,
+					wf_gen->period_remain, wf_gen->step,
+					wf_gen->sample);
 			break;
 	}
 
@@ -128,7 +149,7 @@ void voice_wf_set_triangle(struct voice_wf_gen_t* const wf_gen,
 
 void voice_wf_set_noise(struct voice_wf_gen_t* const wf_gen,
 		uint8_t amplitude) {
-	wf_gen->mode = VOICE_MODE_SQUARE;
+	wf_gen->mode = VOICE_MODE_NOISE;
 	wf_gen->amplitude = amplitude;
 }
 /*
