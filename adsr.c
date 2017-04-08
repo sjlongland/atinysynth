@@ -47,14 +47,6 @@ static uint8_t adsr_release_amp(uint8_t amp, uint8_t count) {
 }
 
 /*!
- * Reset the ADSR state ready for the next note
- */
-void adsr_reset(struct adsr_env_gen_t* const adsr) {
-	adsr->next_event = 0;
-	adsr->state = ADSR_STATE_IDLE;
-}
-
-/*!
  * Compute the ADSR amplitude
  */
 uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {

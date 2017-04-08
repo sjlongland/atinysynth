@@ -72,9 +72,33 @@ struct adsr_env_gen_t {
 };
 
 /*!
- * Reset the ADSR state.
+ * Reset the ADSR state ready for the next note
  */
-void adsr_reset(struct adsr_env_gen_t* const adsr);
+static inline void adsr_reset(struct adsr_env_gen_t* const adsr) {
+	adsr->next_event = 0;
+	adsr->state = ADSR_STATE_IDLE;
+}
+
+/*!
+ * Configure the ADSR.
+ */
+static inline void adsr_config(struct adsr_env_gen_t* const adsr,
+		uint32_t time_scale, uint8_t delay_time,
+		uint8_t attack_time, uint8_t decay_time,
+		uint8_t sustain_time, uint8_t release_time,
+		uint8_t peak_amp, uint8_t sustain_amp) {
+
+	adsr->time_scale = time_scale;
+	adsr->delay_time = delay_time;
+	adsr->attack_time = attack_time;
+	adsr->decay_time = decay_time;
+	adsr->sustain_time = sustain_time;
+	adsr->release_time = release_time;
+	adsr->peak_amp = peak_amp;
+	adsr->sustain_amp = sustain_amp;
+
+	adsr_reset(adsr);
+}
 
 /*!
  * Compute the ADSR amplitude
