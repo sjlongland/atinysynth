@@ -1,0 +1,5 @@
+.*.swp
+*.swp
+*.o
+*.elf
+*.hex
