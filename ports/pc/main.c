@@ -208,7 +208,7 @@ int main(int argc, char** argv) {
 			while (poly_remain && samples_remain) {
 				_DPRINTF("poly_remain = %d\n", poly_remain);
 				int16_t s = poly_synth_next(&synth);
-				*sample_ptr = s << 7;
+				*sample_ptr = s << 8;
 				sample_ptr++;
 				samples_sz++;
 				samples_remain--;
