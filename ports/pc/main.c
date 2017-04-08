@@ -19,6 +19,7 @@
  */
 
 #include "synth.h"
+#include "debug.h"
 #include <stdio.h>
 #include <string.h>
 #include <ao/ao.h>
@@ -68,12 +69,14 @@ int main(int argc, char** argv) {
 		/* Voice selection */
 		if (!strcmp(argv[0], "voice")) {
 			voice = atoi(argv[1]);
+			_DPRINTF("select voice %d\n", voice);
 			argv++;
 			argc--;
 
 		/* Voice channel muting */
 		} else if (!strcmp(argv[0], "mute")) {
 			int mute = atoi(argv[1]);
+			_DPRINTF("mute mask 0x%02x\n", mute);
 			synth.mute = mute;
 			argv++;
 			argc--;
@@ -81,6 +84,7 @@ int main(int argc, char** argv) {
 		/* Voice channel enable */
 		} else if (!strcmp(argv[0], "en")) {
 			int en = atoi(argv[1]);
+			_DPRINTF("enable mask 0x%02x\n", en);
 			synth.enable = en;
 			argv++;
 			argc--;
@@ -88,17 +92,23 @@ int main(int argc, char** argv) {
 		/* Voice waveform mode selection */
 		} else if (!strcmp(argv[0], "dc")) {
 			int amp = atoi(argv[1]);
+			_DPRINTF("channel %d mode DC amp=%d\n",
+					voice, amp);
 			voice_wf_set_dc(&poly_voice[voice].wf, amp);
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "noise")) {
 			int amp = atoi(argv[1]);
+			_DPRINTF("channel %d mode NOISE amp=%d\n",
+					voice, amp);
 			voice_wf_set_noise(&poly_voice[voice].wf, amp);
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "square")) {
 			int freq = atoi(argv[1]);
 			int amp = atoi(argv[2]);
+			_DPRINTF("channel %d mode SQUARE freq=%d amp=%d\n",
+					voice, freq, amp);
 			voice_wf_set_square(&poly_voice[voice].wf,
 					freq, amp);
 			argv += 2;
@@ -106,6 +116,8 @@ int main(int argc, char** argv) {
 		} else if (!strcmp(argv[0], "sawtooth")) {
 			int freq = atoi(argv[1]);
 			int amp = atoi(argv[2]);
+			_DPRINTF("channel %d mode SAWTOOTH freq=%d amp=%d\n",
+					voice, freq, amp);
 			voice_wf_set_sawtooth(&poly_voice[voice].wf,
 					freq, amp);
 			argv += 2;
@@ -113,6 +125,8 @@ int main(int argc, char** argv) {
 		} else if (!strcmp(argv[0], "triangle")) {
 			int freq = atoi(argv[1]);
 			int amp = atoi(argv[2]);
+			_DPRINTF("channel %d mode TRIANGLE freq=%d amp=%d\n",
+					voice, freq, amp);
 			voice_wf_set_triangle(&poly_voice[voice].wf,
 					freq, amp);
 			argv += 2;
@@ -121,46 +135,63 @@ int main(int argc, char** argv) {
 		/* ADSR options */
 		} else if (!strcmp(argv[0], "scale")) {
 			int scale = atoi(argv[1]);
+			_DPRINTF("channel %d ADSR scale %d samples\n",
+					voice, scale);
 			poly_voice[voice].adsr.time_scale = scale;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "delay")) {
 			int time = atoi(argv[1]);
+			_DPRINTF("channel %d ADSR delay %d units\n",
+					voice, time);
 			poly_voice[voice].adsr.delay_time = time;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "attack")) {
 			int time = atoi(argv[1]);
+			_DPRINTF("channel %d ADSR attack %d units\n",
+					voice, time);
 			poly_voice[voice].adsr.attack_time = time;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "decay")) {
 			int time = atoi(argv[1]);
+			_DPRINTF("channel %d ADSR decay %d units\n",
+					voice, time);
 			poly_voice[voice].adsr.decay_time = time;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "sustain")) {
 			int time = atoi(argv[1]);
+			_DPRINTF("channel %d ADSR sustain %d units\n",
+					voice, time);
 			poly_voice[voice].adsr.sustain_time = time;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "release")) {
 			int time = atoi(argv[1]);
+			_DPRINTF("channel %d ADSR release %d units\n",
+					voice, time);
 			poly_voice[voice].adsr.release_time = time;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "peak")) {
 			int amp = atoi(argv[1]);
+			_DPRINTF("channel %d ADSR peak amplitude %d\n",
+					voice, amp);
 			poly_voice[voice].adsr.peak_amp = amp;
 			argv++;
 			argc--;
-		} else if (!strcmp(argv[0], "sustain")) {
+		} else if (!strcmp(argv[0], "samp")) {
 			int amp = atoi(argv[1]);
+			_DPRINTF("channel %d ADSR sustain amplitude %d\n",
+					voice, amp);
 			poly_voice[voice].adsr.sustain_amp = amp;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "next")) {
 			int next = atoi(argv[1]);
+			_DPRINTF("compute next %d samples\n", next);
 			poly_remain = next;
 			argv++;
 			argc--;
@@ -175,12 +206,13 @@ int main(int argc, char** argv) {
 			uint16_t samples_remain = 8192;
 			/* Fill the buffer as much as we can */
 			while (poly_remain && samples_remain) {
+				_DPRINTF("poly_remain = %d\n", poly_remain);
 				int16_t s = poly_synth_next(&synth);
-				//printf("%d: %d\n", samples_sz, s);
 				*sample_ptr = s << 7;
 				sample_ptr++;
 				samples_sz++;
 				samples_remain--;
+				poly_remain--;
 			}
 			fwrite(samples, samples_sz, 2, out);
 			ao_play(device, (char*)samples, 2*samples_sz);
