@@ -5,6 +5,8 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 OBJDUMP = $(CROSS_COMPILE)objdump
 SIZE = $(CROSS_COMPILE)size
 
+INCLUDES ?=
+LIBS ?=
 PORT ?= pc
 BINDIR ?= bin/$(PORT)
 PORTDIR ?= ports/$(PORT)
@@ -24,16 +26,16 @@ prepare:
 	done
 
 $(BINDIR)/synth: $(OBJDIR)/main.o $(OBJDIR)/poly.a
-	$(CC) -g -o $@ $(LDFLAGS) $^
+	$(CC) -g -o $@ $(LDFLAGS) $(LIBS) $^
 
 $(OBJDIR)/poly.a: $(OBJDIR)/adsr.o $(OBJDIR)/waveform.o
 	$(AR) rcs $@ $^
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c prepare
-	$(CC) -o $@ -c $(CPPFLAGS) $(CFLAGS) $<
+	$(CC) -o $@ -c $(CPPFLAGS) $(INCLUDES) $(CFLAGS) $<
 
 $(OBJDIR)/%.o: $(PORTDIR)/%.c prepare
-	$(CC) -o $@ -c $(CPPFLAGS) $(CFLAGS) $<
+	$(CC) -o $@ -c $(CPPFLAGS) $(INCLUDES) $(CFLAGS) $<
 
 clean:
 	-rm -fr $(OBJDIR) $(BINDIR)
