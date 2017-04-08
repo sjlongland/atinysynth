@@ -26,13 +26,13 @@ $(BINDIR)/synth: $(OBJDIR)/main.o $(OBJDIR)/poly.a
 $(OBJDIR)/poly.a: $(OBJDIR)/adsr.o $(OBJDIR)/waveform.o
 	$(AR) rcs $@ $^
 
-$(OBJDIR)/%.o $(OBJDIR)/%.o.dep: $(SRCDIR)/%.c
+$(OBJDIR)/%.o: $(SRCDIR)/%.c
 	@[ -d $(OBJDIR) ] || mkdir -p $(OBJDIR)
 	$(CC) -o $@ -c $(CPPFLAGS) $(INCLUDES) $(CFLAGS) $<
 	$(CC) -MM $(CPPFLAGS) $(INCLUDES) $< \
 		| sed -e '/^[^ ]\+:/ s:^:$(OBJDIR)/:g' > $@.dep
 
-$(OBJDIR)/%.o $(OBJDIR)/%.o.dep: $(PORTDIR)/%.c
+$(OBJDIR)/%.o: $(PORTDIR)/%.c
 	@[ -d $(OBJDIR) ] || mkdir -p $(OBJDIR)
 	$(CC) -o $@ -c $(CPPFLAGS) $(INCLUDES) $(CFLAGS) $<
 	$(CC) -MM $(CPPFLAGS) $(INCLUDES) $< \
