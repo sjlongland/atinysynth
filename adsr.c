@@ -26,25 +26,24 @@
 #endif
 
 /* ADSR attack/decay adjustments */
-#define ADSR_EXP_AMP_FACTOR	(6)
-#define ADSR_EXP_SHIFT		(-8)
-#define ADSR_EXP_TIME_FACTOR	(1)
 #define ADSR_LIN_AMP_FACTOR	(6)
-#define ADSR_DECAY_OFFSET	(16)
 
 /*!
  * ADSR Attack amplitude exponential shift.
  */
-static uint8_t adsr_attack_shift(uint8_t sample) {
-	return (sample + ADSR_EXP_SHIFT)/ADSR_EXP_TIME_FACTOR
-		- ADSR_EXP_AMP_FACTOR;
+static uint8_t adsr_attack_amp(uint8_t amp, uint8_t count) {
+	if (count >= 8)
+		return 0;
+
+	amp >>= count;
+	return amp;
 }
 
 /*!
  * ADSR Release amplitude exponential shift.
  */
-static uint8_t adsr_release_shift(uint8_t sample) {
-	return adsr_attack_shift(ADSR_DECAY_OFFSET - sample);
+static uint8_t adsr_release_amp(uint8_t amp, uint8_t count) {
+	return adsr_attack_amp(amp, 16 - count);
 }
 
 /*!
@@ -127,27 +126,31 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_ATTACK_INIT) {
-		_DPRINTF("adsr=%p ATTACK INIT\n", adsr);
-
 		/* Attack is divided into 16 segments */
 		adsr->time_step = (uint16_t)((adsr->attack_time
 				* adsr->time_scale) >> 4);
 		adsr->counter = 16;
 		adsr->next_event = adsr->time_step;
 		adsr->state = ADSR_STATE_ATTACK;
+
+		_DPRINTF("adsr=%p ATTACK INIT tstep=%d\n",
+				adsr, adsr->time_step);
 	}
 
 	if (adsr->state == ADSR_STATE_ATTACK) {
-		_DPRINTF("adsr=%p ATTACK\n", adsr);
+		_DPRINTF("adsr=%p ATTACK count=%d\n", adsr,
+				adsr->counter);
 
 		if (adsr->counter) {
 			/* Change of amplitude */
 			uint16_t lin_amp = (16-adsr->counter)
 				* adsr->peak_amp;
-			adsr->amplitude = lin_amp
-				>> ADSR_LIN_AMP_FACTOR;
-			adsr->amplitude += adsr->peak_amp >> 
-				adsr_attack_shift(adsr->counter);
+			uint16_t exp_amp = adsr_attack_amp(
+					adsr->peak_amp, adsr->counter);
+			lin_amp >>= ADSR_LIN_AMP_FACTOR;
+			_DPRINTF("adsr=%p ATTACK lin=%d exp=%d\n",
+					adsr, lin_amp, exp_amp);
+			adsr->amplitude = lin_amp + exp_amp;
 			/* Go around again */
 			adsr->counter--;
 			adsr->next_event = adsr->time_step;
@@ -245,8 +248,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 				* adsr->peak_amp;
 			adsr->amplitude = lin_amp
 				>> ADSR_LIN_AMP_FACTOR;
-			adsr->amplitude += adsr->peak_amp >> 
-				adsr_release_shift(adsr->counter);
+			adsr->amplitude += adsr_release_amp(
+					adsr->sustain_amp, adsr->counter);
 			/* Go around again */
 			adsr->counter--;
 			adsr->next_event = adsr->time_step;
@@ -259,7 +262,7 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 		_DPRINTF("adsr=%p RELEASE EXPIRE\n", adsr);
 
 		/* Reset the state */
-		adsr->state = ADSR_STATE_IDLE;
+		adsr->state = ADSR_STATE_DONE;
 		adsr->amplitude = 0;
 	}
 
