@@ -20,6 +20,7 @@
 #ifndef _SYNTH_H
 #define _SYNTH_H
 #include "voice.h"
+#include "debug.h"
 
 /*
  * _POLY_CFG_H is a definition that can be given when compiling poly.c
@@ -75,6 +76,7 @@ static inline int8_t poly_synth_next(struct poly_synth_t* const synth) {
 	while (mask) {
 		if (synth->enable & mask) {
 			/* Channel is enabled */
+			_DPRINTF("poly ch=%d\n", idx);
 			int8_t ch_sample = voice_ch_next(
 					&(synth->voice[idx]));
 			if (!(synth->mute & mask))
