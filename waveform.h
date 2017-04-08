@@ -46,31 +46,31 @@ struct voice_wf_gen_t {
  * Configure the generator for a DC offset synthesis.
  */
 void voice_wf_set_dc(struct voice_wf_gen_t* const wf_gen,
-		uint8_t amplitude);
+		int8_t amplitude);
 
 /*!
  * Configure the generator for square wave synthesis.
  */
 void voice_wf_set_square(struct voice_wf_gen_t* const wf_gen,
-		uint16_t freq, uint8_t amplitude);
+		uint16_t freq, int8_t amplitude);
 
 /*!
  * Configure the generator for sawtooth wave synthesis.
  */
 void voice_wf_set_sawtooth(struct voice_wf_gen_t* const wf_gen,
-		uint16_t freq, uint8_t amplitude);
+		uint16_t freq, int8_t amplitude);
 
 /*!
  * Configure the generator for sawtooth wave synthesis.
  */
 void voice_wf_set_triangle(struct voice_wf_gen_t* const wf_gen,
-		uint16_t freq, uint8_t amplitude);
+		uint16_t freq, int8_t amplitude);
 
 /*!
  * Configure the generator for pseudorandom noise synthesis.
  */
 void voice_wf_set_noise(struct voice_wf_gen_t* const wf_gen,
-		uint8_t amplitude);
+		int8_t amplitude);
 
 /*!
  * Retrieve the next sample from the generator.
