@@ -7,3 +7,5 @@ LIBS += -lao
 INCLUDES += -I$(SRCDIR) -I$(PORTDIR)
 
 TARGET=$(BINDIR)/synth
+
+all: $(TARGET)
