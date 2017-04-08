@@ -76,9 +76,9 @@ static inline int8_t poly_synth_next(struct poly_synth_t* const synth) {
 	while (mask) {
 		if (synth->enable & mask) {
 			/* Channel is enabled */
-			_DPRINTF("poly ch=%d\n", idx);
 			int8_t ch_sample = voice_ch_next(
 					&(synth->voice[idx]));
+			_DPRINTF("poly ch=%d out=%d\n", idx, ch_sample);
 			if (!(synth->mute & mask))
 				sample += ch_sample;
 		}
