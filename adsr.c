@@ -18,6 +18,7 @@
  * MA  02110-1301  USA
  */
 
+#include "debug.h"
 #include "adsr.h"
 #include <stdlib.h>
 #ifdef __AVR_ARCH__
@@ -61,6 +62,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	if (adsr->next_event) {
 		/* Still waiting for next event */
 		adsr->next_event--;
+		_DPRINTF("adsr=%p amp=%d next_in=%d\n",
+				adsr, adsr->amplitude, adsr->next_event);
 		return adsr->amplitude;
 	}
 
@@ -70,6 +73,21 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	 */
 
 	if (adsr->state == ADSR_STATE_IDLE) {
+		_DPRINTF("adsr=%p IDLE time_scale=%d "
+				"delay_time=%d "
+				"attack_time=%d "
+				"decay_time=%d "
+				"release_time=%d "
+				"peak_amp=%d "
+				"sustain_amp=%d\n",
+				adsr, adsr->time_scale,
+				adsr->delay_time,
+				adsr->attack_time,
+				adsr->decay_time,
+				adsr->release_time,
+				adsr->peak_amp,
+				adsr->sustain_amp);
+
 		/* Are registers set up? */
 		if (!adsr->time_scale)
 			return 0;
@@ -87,6 +105,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_DELAY_INIT) {
+		_DPRINTF("adsr=%p DELAY INIT\n", adsr);
+
 		/* Setting up a delay */
 		adsr->amplitude = 0;
 		adsr->next_event = adsr->time_scale
@@ -97,6 +117,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_DELAY_EXPIRE) {
+		_DPRINTF("adsr=%p DELAY EXPIRE\n", adsr);
+
 		/* Delay has expired */
 		if (adsr->attack_time)
 			adsr->state = ADSR_STATE_ATTACK_INIT;
@@ -105,6 +127,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_ATTACK_INIT) {
+		_DPRINTF("adsr=%p ATTACK INIT\n", adsr);
+
 		/* Attack is divided into 16 segments */
 		adsr->time_step = (uint16_t)((adsr->attack_time
 				* adsr->time_scale) >> 4);
@@ -114,6 +138,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_ATTACK) {
+		_DPRINTF("adsr=%p ATTACK\n", adsr);
+
 		if (adsr->counter) {
 			/* Change of amplitude */
 			uint16_t lin_amp = (16-adsr->counter)
@@ -132,6 +158,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_ATTACK_EXPIRE) {
+		_DPRINTF("adsr=%p ATTACK EXPIRE\n", adsr);
+
 		if (adsr->decay_time)
 			adsr->state = ADSR_STATE_DECAY_INIT;
 		else
@@ -139,6 +167,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_DECAY_INIT) {
+		_DPRINTF("adsr=%p DECAY INIT\n", adsr);
+
 		/* We should be at full amplitude */
 		adsr->amplitude = adsr->peak_amp;
 
@@ -150,6 +180,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_DECAY) {
+		_DPRINTF("adsr=%p DECAY\n", adsr);
+
 		if (adsr->counter) {
 			/* Linear decrease in amplitude */
 			uint16_t delta = adsr->peak_amp
@@ -166,6 +198,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_DECAY_EXPIRE) {
+		_DPRINTF("adsr=%p DECAY EXPIRE\n", adsr);
+
 		if (adsr->sustain_time)
 			adsr->state = ADSR_STATE_SUSTAIN_INIT;
 		else
@@ -173,6 +207,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_SUSTAIN_INIT) {
+		_DPRINTF("adsr=%p SUSTAIN INIT\n", adsr);
+
 		adsr->amplitude = adsr->sustain_amp;
 		adsr->next_event = adsr->time_scale
 			* adsr->sustain_time;
@@ -182,6 +218,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_SUSTAIN_EXPIRE) {
+		_DPRINTF("adsr=%p SUSTAIN EXPIRE\n", adsr);
+
 		if (adsr->release_time)
 			adsr->state = ADSR_STATE_RELEASE_INIT;
 		else
@@ -189,6 +227,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_RELEASE_INIT) {
+		_DPRINTF("adsr=%p RELEASE INIT\n", adsr);
+
 		adsr->time_step = (uint16_t)((adsr->release_time
 					* adsr->time_scale) >> 4);
 		adsr->counter = 16;
@@ -197,6 +237,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_RELEASE) {
+		_DPRINTF("adsr=%p RELEASE\n", adsr);
+
 		if (adsr->counter) {
 			/* Change of amplitude */
 			uint16_t lin_amp = adsr->counter
@@ -214,6 +256,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	}
 
 	if (adsr->state == ADSR_STATE_RELEASE_EXPIRE) {
+		_DPRINTF("adsr=%p RELEASE EXPIRE\n", adsr);
+
 		/* Reset the state */
 		adsr->state = ADSR_STATE_IDLE;
 		adsr->amplitude = 0;
