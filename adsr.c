@@ -76,6 +76,7 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 				"delay_time=%d "
 				"attack_time=%d "
 				"decay_time=%d "
+				"sustain_time=%d "
 				"release_time=%d "
 				"peak_amp=%d "
 				"sustain_amp=%d\n",
@@ -83,6 +84,7 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 				adsr->delay_time,
 				adsr->attack_time,
 				adsr->decay_time,
+				adsr->sustain_time,
 				adsr->release_time,
 				adsr->peak_amp,
 				adsr->sustain_amp);
@@ -90,11 +92,18 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 		/* Are registers set up? */
 		if (!adsr->time_scale)
 			return 0;
+		_DPRINTF("adsr=%p time scale set\n", adsr);
+
 		if (!(adsr->delay_time || adsr->attack_time
-				|| adsr->decay_time || adsr->release_time))
+				|| adsr->decay_time
+				|| adsr->sustain_time
+				|| adsr->release_time))
 			return 0;
+		_DPRINTF("adsr=%p envelope timings set\n", adsr);
+
 		if (!(adsr->peak_amp || adsr->sustain_amp))
 			return 0;
+		_DPRINTF("adsr=%p envelope amplitudes set\n", adsr);
 
 		/* All good */
 		if (adsr->delay_time)
