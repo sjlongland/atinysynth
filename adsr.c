@@ -26,7 +26,7 @@
 #endif
 
 /* ADSR attack/decay adjustments */
-#define ADSR_LIN_AMP_FACTOR	(6)
+#define ADSR_LIN_AMP_FACTOR	(5)
 
 /*!
  * ADSR Attack amplitude exponential shift.
@@ -35,7 +35,7 @@ static uint8_t adsr_attack_amp(uint8_t amp, uint8_t count) {
 	if (count >= 8)
 		return 0;
 
-	amp >>= count;
+	amp >>= count+1;
 	return amp;
 }
 
@@ -245,11 +245,13 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 		if (adsr->counter) {
 			/* Change of amplitude */
 			uint16_t lin_amp = adsr->counter
-				* adsr->peak_amp;
-			adsr->amplitude = lin_amp
-				>> ADSR_LIN_AMP_FACTOR;
-			adsr->amplitude += adsr_release_amp(
+				* adsr->sustain_amp;
+			uint16_t exp_amp = adsr_release_amp(
 					adsr->sustain_amp, adsr->counter);
+			lin_amp >>= ADSR_LIN_AMP_FACTOR;
+			_DPRINTF("adsr=%p RELEASE lin=%d exp=%d\n",
+					adsr, lin_amp, exp_amp);
+			adsr->amplitude = lin_amp + exp_amp;
 			/* Go around again */
 			adsr->counter--;
 			adsr->next_event = adsr->time_step;
