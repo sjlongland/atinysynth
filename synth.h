@@ -55,14 +55,14 @@ struct poly_synth_t {
 	 * Note no bounds checking is done, if you have only defined 4
 	 * channels, then only set bits 0-3, don't set bits 4 onwards here.
 	 */
-	uintptr_t enable;
+	volatile uintptr_t enable;
 	/*!
 	 * Bit-field muting given voices.  This allows for selective adding
 	 * of voices to the overall output.  If a field is 1, then that voice
 	 * channel is not included.  (Note, disabled channels are *also*
 	 * not included.)
 	 */
-	uintptr_t mute;
+	volatile uintptr_t mute;
 };
 
 /*!
