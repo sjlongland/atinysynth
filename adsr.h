@@ -20,6 +20,7 @@
 #ifndef _ADSR_H
 #define _ADSR_H
 
+#include "debug.h"
 #include <stdint.h>
 
 /* ADSR states */
@@ -72,11 +73,27 @@ struct adsr_env_gen_t {
 };
 
 /*!
- * Reset the ADSR state ready for the next note
+ * Reset the ADSR state ready for the next note.
  */
 static inline void adsr_reset(struct adsr_env_gen_t* const adsr) {
 	adsr->next_event = 0;
 	adsr->state = ADSR_STATE_IDLE;
+	_DPRINTF("adsr=%p INIT time_scale=%d "
+			"delay_time=%d "
+			"attack_time=%d "
+			"decay_time=%d "
+			"sustain_time=%d "
+			"release_time=%d "
+			"peak_amp=%d "
+			"sustain_amp=%d\n",
+			adsr, adsr->time_scale,
+			adsr->delay_time,
+			adsr->attack_time,
+			adsr->decay_time,
+			adsr->sustain_time,
+			adsr->release_time,
+			adsr->peak_amp,
+			adsr->sustain_amp);
 }
 
 /*!
