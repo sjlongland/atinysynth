@@ -104,6 +104,14 @@ static inline void adsr_config(struct adsr_env_gen_t* const adsr,
  * Compute the ADSR amplitude
  */
 uint8_t adsr_next(struct adsr_env_gen_t* const adsr);
+
+/*!
+ * Test to see if the ADSR is done.
+ */
+static inline uint8_t adsr_is_done(struct adsr_env_gen_t* const adsr) {
+	return (adsr->state == ADSR_STATE_DONE);
+}
+
 #endif
 /*
  * vim: set sw=8 ts=8 noet si tw=72
