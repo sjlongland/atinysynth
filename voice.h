@@ -37,6 +37,13 @@ struct voice_ch_t {
 };
 
 /*!
+ * Determine if the voice channel is "done".
+ */
+inline static uint8_t voice_ch_is_done(struct voice_ch_t* const voice) {
+	return adsr_is_done(&(voice->adsr));
+}
+
+/*!
  * Compute the next voice channel sample.
  */
 inline static int8_t voice_ch_next(struct voice_ch_t* const voice) {
