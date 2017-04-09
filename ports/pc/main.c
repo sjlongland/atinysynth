@@ -61,7 +61,6 @@ int main(int argc, char** argv) {
 	argv++;
 	while (argc > 0) {
 		int res = 0;
-		uint32_t poly_remain = 0;
 
 		if (!strcmp(argv[0], "end"))
 			break;
@@ -189,30 +188,30 @@ int main(int argc, char** argv) {
 			poly_voice[voice].adsr.sustain_amp = amp;
 			argv++;
 			argc--;
-		} else if (!strcmp(argv[0], "next")) {
-			int next = atoi(argv[1]);
-			_DPRINTF("compute next %d samples\n", next);
-			poly_remain = next;
-			argv++;
-			argc--;
+		} else if (!strcmp(argv[0], "reset")) {
+			_DPRINTF("channel %d reset\n", voice);
+			adsr_reset(&poly_voice[voice].adsr);
 		}
 
 		argv++;
 		argc--;
 
 		/* Play out any remaining samples */
-		while (poly_remain) {
+		if (synth.enable)
+			_DPRINTF("----- Start playback (0x%lx) -----\n",
+					synth.enable);
+
+		while (synth.enable) {
 			int16_t* sample_ptr = samples;
 			uint16_t samples_remain = 8192;
 			/* Fill the buffer as much as we can */
-			while (poly_remain && samples_remain) {
-				_DPRINTF("poly_remain = %d\n", poly_remain);
+			while (synth.enable && samples_remain) {
+				_DPRINTF("enable = 0x%lx\n", synth.enable);
 				int16_t s = poly_synth_next(&synth);
 				*sample_ptr = s << 8;
 				sample_ptr++;
 				samples_sz++;
 				samples_remain--;
-				poly_remain--;
 			}
 			fwrite(samples, samples_sz, 2, out);
 			ao_play(device, (char*)samples, 2*samples_sz);
