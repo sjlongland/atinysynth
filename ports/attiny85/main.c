@@ -19,21 +19,16 @@
  */
 
 #include "synth.h"
-#include "fifo.h"
 #include <string.h>
 #include <avr/io.h>
 #include <util/delay.h>
 #include <avr/interrupt.h>
 
-#define SAMPLE_LEN	128
-static volatile uint8_t sample_buffer[SAMPLE_LEN];
-static struct fifo_t sample_fifo;
-
 struct voice_ch_t poly_voice[16];
 struct poly_synth_t synth;
 
 int main(void) {
-	fifo_init(&sample_fifo, sample_buffer, SAMPLE_LEN);
+	/* Initialise configuration */
 	memset(poly_voice, 0, sizeof(poly_voice));
 	synth.voice = poly_voice;
 	synth.enable = 0;
@@ -58,17 +53,22 @@ int main(void) {
 	TIMSK |= (1 << OCIE0A);		/* Enable interrupts */
 
 	/* Configure the synthesizer */
-	synth.enable = 1;
-	voice_wf_set_square(&poly_voice[0].wf, 1000, 127);
-	poly_voice[0].adsr.time_scale = 32;
-	poly_voice[0].adsr.sustain_time = 120;
-	poly_voice[0].adsr.sustain_amp = 255;
+	voice_wf_set_triangle(&poly_voice[0].wf, 1000, 127);
+	voice_wf_set_triangle(&poly_voice[1].wf, 1200, 127);
+	adsr_config(&poly_voice[0].adsr,
+			200, 30, 10, 10, 10, 10, 255, 192);
+	adsr_config(&poly_voice[1].adsr,
+			200, 0, 10, 10, 10, 10, 255, 192);
+	synth.enable = 3;
 
 	sei();
 	while(1) {
-		if (poly_voice[0].adsr.state ==
-				ADSR_STATE_DONE)
+		if (!synth.enable) {
 			adsr_reset(&poly_voice[0].adsr);
+			adsr_reset(&poly_voice[1].adsr);
+			synth.enable = 3;
+			PORTB ^= (1 << 3);
+		}
 	}
 	return 0;
 }
@@ -76,5 +76,4 @@ int main(void) {
 ISR(TIM0_COMPA_vect) {
 	int8_t s = poly_synth_next(&synth);
 	OCR1B = s + 128;
-	PORTB ^= (1 << 3);
 }
