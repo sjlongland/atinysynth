@@ -38,6 +38,11 @@ $(OBJDIR)/%.o: $(PORTDIR)/%.c
 	$(CC) -MM $(CPPFLAGS) $(INCLUDES) $< \
 		| sed -e '/^[^ ]\+:/ s:^:$(OBJDIR)/:g' > $@.dep
 
+$(SRCDIR)/sine.c: $(SRCDIR)/gensine.py
+	python $^ --amplitude 127 --num-samples-bits \
+		--num-samples 6 --data-type int8_t \
+		> $@
+
 clean:
 	-rm -fr $(OBJDIR) $(BINDIR)
 
