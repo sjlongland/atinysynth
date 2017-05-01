@@ -11,6 +11,7 @@ PORT ?= pc
 BINDIR ?= bin/$(PORT)
 PORTDIR ?= ports/$(PORT)
 OBJDIR ?= obj/$(PORT)
+OBJECTS :=
 
 SRCDIR ?= $(PWD)
 
@@ -19,7 +20,7 @@ SRCDIR ?= $(PWD)
 -include local.mk
 include $(PORTDIR)/Makefile
 
-$(BINDIR)/synth: $(OBJDIR)/main.o $(OBJDIR)/poly.a
+$(BINDIR)/synth: $(OBJECTS) $(OBJDIR)/poly.a
 	@[ -d $(BINDIR) ] || mkdir -p $(BINDIR)
 	$(CC) -g -o $@ $(LDFLAGS) $(LIBS) $^
 
