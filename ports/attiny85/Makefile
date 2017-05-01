@@ -9,6 +9,7 @@ PROG_ARGS ?= -B 10 -c stk500v2 -P /dev/ttyACM0
 PROG_DEV ?= t85
 TARGET=$(BINDIR)/synth.ihex
 INCLUDES += -I$(SRCDIR) -I$(PORTDIR)
+OBJECTS += $(OBJDIR)/main.o $(OBJDIR)/adckbd.o
 
 LFUSE=0xc1
 HFUSE=0xdf
