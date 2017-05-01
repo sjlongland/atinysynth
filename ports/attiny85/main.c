@@ -19,6 +19,8 @@
  */
 
 #include "synth.h"
+#include "adckbd.h"
+
 #include <string.h>
 #include <avr/io.h>
 #include <util/delay.h>
@@ -34,9 +36,11 @@ int main(void) {
 	synth.enable = 0;
 	synth.mute = 0;
 
+	adckbd_init();
+
 	/* Enable output on PB4 (PWM out) */
-	DDRB |= (1 << 4) | (1 << 3);
-	PORTB &= ~((1 << 4) | (1 << 3));
+	DDRB |= (1 << 4) | (1 << 0) | (1 << 1) | (1 << 2);
+	PORTB &= ~((1 << 4) | (1 << 0) | (1 << 1) | (1 << 2));
 
 	/* Timer 1 configuration for PWM */
 	OCR1B = 128;			/* Initial PWM value */
@@ -53,21 +57,48 @@ int main(void) {
 	TIMSK |= (1 << OCIE0A);		/* Enable interrupts */
 
 	/* Configure the synthesizer */
-	voice_wf_set_triangle(&poly_voice[0].wf, 1000, 127);
-	voice_wf_set_triangle(&poly_voice[1].wf, 1200, 127);
+	voice_wf_set_triangle(&poly_voice[0].wf, 523, 63);
+	voice_wf_set_triangle(&poly_voice[1].wf, 659, 63);
+	voice_wf_set_triangle(&poly_voice[2].wf, 784, 63);
+	voice_wf_set_triangle(&poly_voice[3].wf, 880, 63);
 	adsr_config(&poly_voice[0].adsr,
-			200, 30, 10, 10, 10, 10, 255, 192);
+			100, 0, 10, 10, 10, 10, 255, 192);
 	adsr_config(&poly_voice[1].adsr,
-			200, 0, 10, 10, 10, 10, 255, 192);
-	synth.enable = 3;
+			100, 0, 10, 10, 10, 10, 255, 192);
+	adsr_config(&poly_voice[2].adsr,
+			100, 0, 10, 10, 10, 10, 255, 192);
+	adsr_config(&poly_voice[3].adsr,
+			100, 0, 10, 10, 10, 10, 255, 192);
+	synth.enable = 0x0;
 
 	sei();
 	while(1) {
-		if (!synth.enable) {
-			adsr_reset(&poly_voice[0].adsr);
-			adsr_reset(&poly_voice[1].adsr);
-			synth.enable = 3;
-			PORTB ^= (1 << 3);
+		PORTB ^= (1 << 0);
+		if (adckbd_now & ADCKBD_CHANGED) {
+			uint8_t btn = 0;
+			uint8_t voice = 0;
+			for (btn = ADCKBD_PRESSED(0), voice = 0;
+					btn & ADCKBD_ALL;
+					btn <<= 1, voice++) {
+				PORTB ^= (1 << 2);
+				/* Is it pressed now? */
+				if (!(adckbd_now & btn))
+					continue;
+
+				/* Was it pressed before? */
+				if (!(adckbd_diff & btn))
+					continue;
+
+				adsr_reset(&poly_voice[voice].adsr);
+				synth.enable |= btn;
+
+				/* Acknowledge key */
+				adckbd_now &= ~btn;
+			}
+
+			/* Acknowledge changes */
+			adckbd_now &= ~ADCKBD_CHANGED;
+			PORTB ^= (1 << 1);
 		}
 	}
 	return 0;
