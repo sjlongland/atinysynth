@@ -41,22 +41,28 @@
 #define ADSR_STATE_DONE			(0xff)
 
 /*!
+ * Hold this state until `adsr_continue` is called.  Valid for
+ * `delay_time` and `sustain_time` only.
+ */
+#define ADSR_INFINITE			UINT8_MAX
+
+/*!
  * ADSR Envelope Generator data.  20 bytes.
  */
 struct adsr_env_gen_t {
-	/*! Time to next event, samples */
+	/*! Time to next event, samples.  UINT32_MAX = infinite */
 	uint32_t next_event;
 	/*! Time step, samples */
 	uint16_t time_step;
 	/*! Time scale, samples per unit */
 	uint32_t time_scale;
-	/*! Delay period, time units */
+	/*! Delay period, time units.  UINT8_MAX = infinite */
 	uint8_t delay_time;
 	/*! Attack period, time units */
 	uint8_t attack_time;
 	/*! Decay period, time units */
 	uint8_t decay_time;
-	/*! Sustain period, time units */
+	/*! Sustain period, time units.  UINT8_MAX = infinite */
 	uint8_t sustain_time;
 	/*! Release period, time units */
 	uint8_t release_time;
@@ -127,6 +133,13 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr);
  */
 static inline uint8_t adsr_is_done(struct adsr_env_gen_t* const adsr) {
 	return (adsr->state == ADSR_STATE_DONE);
+}
+
+/*!
+ * Tell the ADSR to move onto the next state.
+ */
+static inline void adsr_continue(struct adsr_env_gen_t* const adsr) {
+	adsr->next_event = 0;
 }
 
 #endif

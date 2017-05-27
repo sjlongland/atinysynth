@@ -29,6 +29,18 @@
 #define ADSR_LIN_AMP_FACTOR	(5)
 
 /*!
+ * Helper macro, returns the time in samples if the number of
+ * time units ≠ UINT8_MAX (infinite), otherwise it returns
+ * UINT32_MAX.
+ */
+static inline uint32_t adsr_num_samples(uint32_t scale, uint8_t units) {
+	if (~units)
+		return scale * units;
+	else
+		return UINT32_MAX;
+}
+
+/*!
  * ADSR Attack amplitude exponential shift.
  */
 static uint8_t adsr_attack_amp(uint8_t amp, uint8_t count) {
@@ -52,7 +64,8 @@ static uint8_t adsr_release_amp(uint8_t amp, uint8_t count) {
 uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	if (adsr->next_event) {
 		/* Still waiting for next event */
-		adsr->next_event--;
+		if (~adsr->next_event)
+			adsr->next_event--;
 		_DPRINTF("adsr=%p amp=%d next_in=%d\n",
 				adsr, adsr->amplitude, adsr->next_event);
 		return adsr->amplitude;
@@ -109,8 +122,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 
 		/* Setting up a delay */
 		adsr->amplitude = 0;
-		adsr->next_event = adsr->time_scale
-			* adsr->delay_time;
+		adsr->next_event = adsr_num_samples(
+				adsr->time_scale, adsr->delay_time);
 		adsr->state = ADSR_STATE_DELAY_EXPIRE;
 		/* Wait for delay */
 		return adsr->amplitude;
@@ -214,8 +227,8 @@ uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 		_DPRINTF("adsr=%p SUSTAIN INIT\n", adsr);
 
 		adsr->amplitude = adsr->sustain_amp;
-		adsr->next_event = adsr->time_scale
-			* adsr->sustain_time;
+		adsr->next_event = adsr_num_samples(
+				adsr->time_scale, adsr->sustain_time);
 		adsr->state = ADSR_STATE_SUSTAIN_EXPIRE;
 		/* Wait for delay */
 		return adsr->amplitude;
