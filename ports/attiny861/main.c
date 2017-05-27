@@ -141,7 +141,7 @@ ISR(TIMER0_COMPA_vect) {
 		/* We are reading inputs */
 		uint8_t diff;
 		button_last = button_state;
-		button_state = PINA;
+		button_state = ~PINA;
 		/* Determine differences from last */
 		diff = button_state ^ button_last;
 		/* Detect button presses & releases */
@@ -161,7 +161,7 @@ ISR(TIMER0_COMPA_vect) {
 		PORTB |= GPIO_EN;
 		/* Wait for latch */
 		_delay_us(1);
-		/* Switch pin direction */
+		/* Switch to reading inputs */
 		DDRA = 0x00;
 	}
 
