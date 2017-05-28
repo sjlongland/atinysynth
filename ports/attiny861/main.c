@@ -286,7 +286,7 @@ ISR(TIMER0_COMPA_vect) {
 		/* Switch on input MUXes */
 		PORTB |= GPIO_EN;
 		/* Switch to reading inputs */
-		PORTA = 0;
+		PORTA = 0xff;
 		DDRA = 0x00;
 	}
 
