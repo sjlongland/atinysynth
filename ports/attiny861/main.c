@@ -198,7 +198,14 @@ int main(void) {
 	synth.enable = 0x0;
 	synth.mute = 0x0;
 
+	/* Turn on interrupts */
 	sei();
+
+	/* Reset button states */
+	button_hit = 0;
+	button_release = 0;
+
+	/* Enter main loop */
 	while(1) {
 		/* Check the button states */
 		uint8_t b = 0;
