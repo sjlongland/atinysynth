@@ -34,7 +34,7 @@
  * UINT32_MAX.
  */
 static inline uint32_t adsr_num_samples(uint32_t scale, uint8_t units) {
-	if (~units)
+	if (units != ADSR_INFINITE)
 		return scale * units;
 	else
 		return UINT32_MAX;
@@ -64,7 +64,7 @@ static uint8_t adsr_release_amp(uint8_t amp, uint8_t count) {
 uint8_t adsr_next(struct adsr_env_gen_t* const adsr) {
 	if (adsr->next_event) {
 		/* Still waiting for next event */
-		if (~adsr->next_event)
+		if (adsr->next_event != UINT32_MAX)
 			adsr->next_event--;
 		_DPRINTF("adsr=%p amp=%d next_in=%d\n",
 				adsr, adsr->amplitude, adsr->next_event);
