@@ -21,6 +21,6 @@
  * MA  02110-1301  USA
  */
 
-#define SYNTH_FREQ		8000
+#define SYNTH_FREQ		(16000)
 
 #endif
