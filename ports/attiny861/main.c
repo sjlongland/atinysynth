@@ -141,7 +141,7 @@ static void trigger_button(uint8_t b) {
 		adsr_config(&voice->adsr,
 				100, 0, 10, 10,
 				ADSR_INFINITE, 10, 255, 192);
-		voice_wf_set_triangle(&voice->wf, freq, 63);
+		voice_wf_set_triangle(&voice->wf, freq, 127);
 
 		synth.enable |= vm;
 	}
