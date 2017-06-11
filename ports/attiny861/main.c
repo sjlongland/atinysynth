@@ -47,14 +47,17 @@ struct voice_ch_t poly_voice[VOICES];
 /*! Synthesizer state */
 struct poly_synth_t synth;
 
-/*! Amplifier turn-off delay */
-static volatile uint8_t amp_powerdown = 0;
+/*! 1-millisecond timer tick */
+static volatile uint16_t ms_timer = 0;
+
+/*! Amplifier turn-off delay in seconds */
+static volatile uint16_t amp_powerdown = 0;
 
 /*!
  * Delay in powering down amplifier, since it makes an annoying pop when
  * it does power down.  (Sample ticks)
  */
-#define AMP_POWERDOWN_DELAY	(100)
+#define AMP_POWERDOWN_DELAY	(60000)
 
 /*! Number of I/O channels */
 #define CHANNELS	(8)
@@ -205,8 +208,22 @@ int main(void) {
 	button_hit = 0;
 	button_release = 0;
 
+	/* Turn on amp early */
+	PORTB |= AUDIO_EN;
+	amp_powerdown = AMP_POWERDOWN_DELAY;
+
 	/* Enter main loop */
 	while(1) {
+		/* Count down millisecond timer */
+		if (!ms_timer) {
+			/* One millisecond has passed */
+			ms_timer = SYNTH_FREQ/10;
+
+			/* Tick down the amplifier power-down timer */
+			if ((!synth.enable) && amp_powerdown)
+				amp_powerdown--;
+		}
+
 		/* Check the button states */
 		uint8_t b = 0;
 		uint8_t bm = 1;
@@ -297,9 +314,9 @@ ISR(TIMER0_COMPA_vect) {
 		DDRA = 0x00;
 	}
 
-	/* Tick down the amplifier power-down timer */
-	if ((!synth.enable) && amp_powerdown)
-		amp_powerdown--;
+	/* Tick down the one-second timer */
+	if (ms_timer)
+		ms_timer--;
 
 	/* Compute and output the next sample */
 	int8_t s = poly_synth_next(&synth);
