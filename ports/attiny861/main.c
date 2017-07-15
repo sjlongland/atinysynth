@@ -237,41 +237,45 @@ ISR(TIMER0_COMPA_vect) {
 	static uint8_t gpio_state = GPIO_STATE_READ;
 	static uint8_t cur_light = 0;
 
-	if (gpio_state == GPIO_STATE_READ) {
-		/* We are reading inputs */
-		static uint8_t last = 0;
-		static uint8_t delay = DEBOUNCE_DELAY;
-		uint8_t now = ~PINA;
+	switch (gpio_state) {
+	case GPIO_STATE_READ:
+		{
+			/* We are reading inputs */
+			static uint8_t last = 0;
+			static uint8_t delay = DEBOUNCE_DELAY;
+			uint8_t now = ~PINA;
 
-		if (now != last) {
-			/*
-			 * We detected a change… reset
-			 * debounce timer
-			 */
-			last = now;
-			delay = DEBOUNCE_DELAY;
-		} else if (delay) {
-			/* Wait for bouncing to finish */
-			delay--;
-		} else {
-			/* Bouncing finished */
-			uint8_t diff;
+			if (now != last) {
+				/*
+				 * We detected a change… reset
+				 * debounce timer
+				 */
+				last = now;
+				delay = DEBOUNCE_DELAY;
+			} else if (delay) {
+				/* Wait for bouncing to finish */
+				delay--;
+			} else {
+				/* Bouncing finished */
+				uint8_t diff;
 
-			button_last = button_state;
-			button_state = now;
-			/* Determine differences from last */
-			diff = button_state ^ button_last;
-			/* Detect button presses & releases */
-			button_hit |= button_state & diff;
-			button_release |= (~button_state) & diff;
+				button_last = button_state;
+				button_state = now;
+				/* Determine differences from last */
+				diff = button_state ^ button_last;
+				/* Detect button presses & releases */
+				button_hit |= button_state & diff;
+				button_release |= (~button_state) & diff;
+			}
+			/* Turn off lights */
+			OCR1D = 0;
+			/* Switch to setting outputs */
+			PORTB &= ~GPIO_EN;
+			DDRA = 0xff;
+			gpio_state = GPIO_STATE_SELECT;
+			break;
 		}
-		/* Turn off lights */
-		OCR1D = 0;
-		/* Switch to setting outputs */
-		PORTB &= ~GPIO_EN;
-		DDRA = 0xff;
-		gpio_state = GPIO_STATE_SELECT;
-	} else if (gpio_state == GPIO_STATE_SELECT) {
+	case GPIO_STATE_SELECT:
 		/* We are setting outputs */
 		PORTA = (1 << cur_light);
 		/* Switch on input MUXes */
@@ -280,12 +284,14 @@ ISR(TIMER0_COMPA_vect) {
 		PORTA = 0xff;
 		DDRA = 0x00;
 		gpio_state = GPIO_STATE_PWM;
-	} else if (gpio_state == GPIO_STATE_PWM) {
+		break;
+	case GPIO_STATE_PWM:
 		OCR1D = light_output[cur_light];
 		/* Increment the light for later (modulo 8) */
 		cur_light++;
 		cur_light &= 0x07;
 		gpio_state = GPIO_STATE_READ;
+		break;
 	}
 
 	/* Tick down the one-second timer */
