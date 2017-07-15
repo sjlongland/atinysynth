@@ -91,34 +91,6 @@ static volatile uint8_t
  */
 static uint8_t light_output[CHANNELS] = {0, 0, 0, 0, 0, 0, 0, 0};
 
-/*!
- * Button-voice assignments… -1 means no assignment
- */
-static uint8_t button_voice[CHANNELS] = {-1, -1, -1, -1, -1, -1, -1, -1};
-
-/*!
- * Find the voice channel number assigned to a button, or return NULL if
- * no channel is assigned.
- *
- * @param	b	Button ID number (0…CHANNELS-1)
- * @returns		Associated voice channel
- * @retval	NULL	Not assigned a voice channel
- */
-static struct voice_ch_t* get_button_voice(uint8_t b) {
-	uint8_t v = button_voice[b];
-
-	if (v == -1)
-		return NULL;	/* Not assigned */
-
-	if (!(synth.enable & (1 << v))) {
-		/* Stale assignment */
-		button_voice[b] = -1;
-		return NULL;
-	}
-
-	return &poly_voice[v];
-}
-
 
 /*!
  * Trigger playback of a tone for a button.
@@ -126,18 +98,7 @@ static struct voice_ch_t* get_button_voice(uint8_t b) {
  * @param	b	Button ID number (0…CHANNELS-1)
  */
 static void trigger_button(uint8_t b) {
-	/* Find a free voice channel */
-	uint8_t v = 0, vm = 0;
-	struct voice_ch_t* voice;
-	for (v = 0, vm = 1;
-			v < VOICES;
-			v++, vm <<= 1) {
-		if (!(synth.enable & vm)) {
-			voice = &poly_voice[v];
-			button_voice[b] = v;
-			break;
-		}
-	}
+	struct voice_ch_t* voice = &poly_voice[b];
 
 	if (voice) {
 		uint16_t freq = pgm_read_dword(&button_freq[b]);
@@ -146,7 +107,7 @@ static void trigger_button(uint8_t b) {
 				ADSR_INFINITE, 10, 255, 192);
 		voice_wf_set_triangle(&voice->wf, freq, 127);
 
-		synth.enable |= vm;
+		synth.enable |= (1 << b);
 	}
 }
 
@@ -228,21 +189,9 @@ int main(void) {
 		uint8_t b = 0;
 		uint8_t bm = 1;
 		for (b = 0, bm = 1; b < CHANNELS; b++, bm <<= 1) {
-			struct voice_ch_t* voice = get_button_voice(b);
+			struct voice_ch_t* voice = &poly_voice[b];
 
-			if (voice) {
-				/* See if it is time to release? */
-				button_hit &= ~bm;
-				if ((voice->adsr.state ==
-						ADSR_STATE_SUSTAIN_EXPIRE)
-						&& (button_release & bm)) {
-					adsr_continue(&voice->adsr);
-					button_release &= ~bm;
-				}
-
-				/* Update the LED for that channel */
-				light_output[b] = voice->adsr.amplitude;
-			} else {
+			if (adsr_is_idle(&voice->adsr)) {
 				/* Has the button been pressed? */
 				button_release &= ~bm;
 				if (button_hit & bm) {
@@ -251,6 +200,19 @@ int main(void) {
 				} else {
 					light_output[b] = 0;
 				}
+			} else if (adsr_is_done(&voice->adsr)) {
+				adsr_reset(&voice->adsr);
+			} else {
+				/* See if it is time to release? */
+				button_hit &= ~bm;
+				if (adsr_is_waiting(&voice->adsr)
+						&& (button_release & bm)) {
+					adsr_continue(&voice->adsr);
+					button_release &= ~bm;
+				}
+
+				/* Update the LED for that channel */
+				light_output[b] = voice->adsr.amplitude;
 			}
 		}
 
