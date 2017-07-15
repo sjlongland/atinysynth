@@ -78,13 +78,15 @@ const uint16_t button_freq[CHANNELS] PROGMEM = {
 };
 
 /*!
- * Button states, current, last, hit flags and release flags.
+ * Button states, current, last, hit flags and release flags… and which ones
+ * we saw on power-up.
  */
 static volatile uint8_t
 	button_state = 0,
 	button_last = 0,
 	button_hit = 0,
-	button_release = 0;
+	button_release = 0,
+	button_enable = 0;
 
 /*!
  * LED amplitudes… 0 = off
@@ -128,6 +130,10 @@ int main(void) {
 	_delay_ms(1);
 	DDRA = 0x00;
 	PORTA = 0;
+
+	/* Determine which buttons are in use: they are pulled high. */
+	_delay_ms(1);
+	button_enable = PINA;
 
 	/* Timer 1 configuration for PWM */
 	OCR1C = 255;			/* Maximum PWM value */
@@ -260,7 +266,7 @@ ISR(TIMER0_COMPA_vect) {
 				uint8_t diff;
 
 				button_last = button_state;
-				button_state = now;
+				button_state = now & button_enable;
 				/* Determine differences from last */
 				diff = button_state ^ button_last;
 				/* Detect button presses & releases */
