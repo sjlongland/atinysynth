@@ -229,8 +229,15 @@ int main(void) {
 	return 0;
 }
 
+#define GPIO_STATE_READ		(0)
+#define GPIO_STATE_SELECT	(1)
+#define GPIO_STATE_PWM		(2)
+
 ISR(TIMER0_COMPA_vect) {
-	if (PORTB & GPIO_EN) {
+	static uint8_t gpio_state = GPIO_STATE_READ;
+	static uint8_t cur_light = 0;
+
+	if (gpio_state == GPIO_STATE_READ) {
 		/* We are reading inputs */
 		static uint8_t last = 0;
 		static uint8_t delay = DEBOUNCE_DELAY;
@@ -258,22 +265,27 @@ ISR(TIMER0_COMPA_vect) {
 			button_hit |= button_state & diff;
 			button_release |= (~button_state) & diff;
 		}
+		/* Turn off lights */
+		OCR1D = 0;
 		/* Switch to setting outputs */
 		PORTB &= ~GPIO_EN;
 		DDRA = 0xff;
-	} else {
+		gpio_state = GPIO_STATE_SELECT;
+	} else if (gpio_state == GPIO_STATE_SELECT) {
 		/* We are setting outputs */
-		static uint8_t cur_light = 0;
-		OCR1D = light_output[cur_light];
 		PORTA = (1 << cur_light);
+		/* Switch on input MUXes */
+		PORTB |= GPIO_EN;
+		/* Switch to PWM */
+		PORTA = 0xff;
+		DDRA = 0x00;
+		gpio_state = GPIO_STATE_PWM;
+	} else if (gpio_state == GPIO_STATE_PWM) {
+		OCR1D = light_output[cur_light];
 		/* Increment the light for later (modulo 8) */
 		cur_light++;
 		cur_light &= 0x07;
-		/* Switch on input MUXes */
-		PORTB |= GPIO_EN;
-		/* Switch to reading inputs */
-		PORTA = 0xff;
-		DDRA = 0x00;
+		gpio_state = GPIO_STATE_READ;
 	}
 
 	/* Tick down the one-second timer */
