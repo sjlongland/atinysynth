@@ -83,9 +83,6 @@ const uint16_t button_freq[CHANNELS] PROGMEM = {
  */
 static volatile uint8_t
 	button_state = 0,
-	button_last = 0,
-	button_hit = 0,
-	button_release = 0,
 	button_enable = 0;
 
 /*!
@@ -171,10 +168,6 @@ int main(void) {
 	/* Turn on interrupts */
 	sei();
 
-	/* Reset button states */
-	button_hit = 0;
-	button_release = 0;
-
 	/* Turn on amp early */
 	PORTB |= AUDIO_EN;
 	amp_powerdown = AMP_POWERDOWN_DELAY;
@@ -199,9 +192,7 @@ int main(void) {
 
 			if (adsr_is_idle(&voice->adsr)) {
 				/* Has the button been pressed? */
-				button_release &= ~bm;
-				if (button_hit & bm) {
-					button_hit &= ~bm;
+				if (button_state & bm) {
 					trigger_button(b);
 				} else {
 					light_output[b] = 0;
@@ -210,11 +201,9 @@ int main(void) {
 				adsr_reset(&voice->adsr);
 			} else {
 				/* See if it is time to release? */
-				button_hit &= ~bm;
 				if (adsr_is_waiting(&voice->adsr)
-						&& (button_release & bm)) {
+						&& (~button_state & bm)) {
 					adsr_continue(&voice->adsr);
-					button_release &= ~bm;
 				}
 
 				/* Update the LED for that channel */
@@ -263,15 +252,7 @@ ISR(TIMER0_COMPA_vect) {
 				delay--;
 			} else {
 				/* Bouncing finished */
-				uint8_t diff;
-
-				button_last = button_state;
 				button_state = now & button_enable;
-				/* Determine differences from last */
-				diff = button_state ^ button_last;
-				/* Detect button presses & releases */
-				button_hit |= button_state & diff;
-				button_release |= (~button_state) & diff;
 			}
 			/* Turn off lights */
 			OCR1D = 0;
