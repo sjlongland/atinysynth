@@ -39,7 +39,7 @@
 #define DEBOUNCE_DELAY	(10)
 
 /*! Number of voices */
-#define VOICES		(16)
+#define VOICES		(8)
 
 /*! Voice states */
 struct voice_ch_t poly_voice[VOICES];
