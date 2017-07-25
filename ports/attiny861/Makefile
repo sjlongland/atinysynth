@@ -23,8 +23,8 @@ LFUSE=0xc1
 # 	SPIEN=0		: 0x00	: Enable SPI programming
 # 	WDTON=1		: 0x10	: Disable watchdog
 # 	EESAVE=1	: 0x08	: EEPROM not preserved during erase
-# 	BODLEVEL=7	: 0x07	: Brown-out detection disabled
-HFUSE=0xdf
+# 	BODLEVEL=4	: 0x06	: Brown-out detection 2.5-2.9V
+HFUSE=0xdd
 # Extended fuse:
 # 	SELFPRGEN=unprogrammed	: Disable self programming
 EFUSE=0xff
