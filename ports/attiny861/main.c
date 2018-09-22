@@ -129,7 +129,7 @@ int main(void) {
 	PORTA = 0;
 
 	/* Determine which buttons are in use: they are pulled high. */
-	_delay_ms(1);
+	_delay_ms(100);
 	button_enable = PINA;
 
 	/* Timer 1 configuration for PWM */
