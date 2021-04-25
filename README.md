@@ -16,7 +16,7 @@ Principle of operation
 ----------------------
 
 The library runs as a state machine.  Synthesis is performed completely
-using only integer artihmatic operations: specifically addition,
+using only integer arithmetic operations: specifically addition,
 subtraction, left and right shifts, and occasional multiplication.  This
 makes it suitable for smaller CPU cores such as Atmel's TinyAVR, ARM's
 Cortex M0+, lower-end TI MSP430 and other minimalist CPU cores that lack
@@ -51,7 +51,7 @@ waveform moves through the following states:
    state of multiple voices to be configured at some convenient point in
    the program in bulk whilst still providing flexibility on when a
    particular note is played.  As there is no amplitude change, an
-   "infinte" time delay may also be specified here, allowing a note to
+   "infinite" time delay may also be specified here, allowing a note to
    be configured then triggered "on cue".
 
 2. Attack phase: The amplitude starts at 0, and using an approximated
@@ -287,7 +287,7 @@ amplitude.
 ### PC port (`pc`)
 
 This uses `libao` and a command line interface to simulate the output of
-the synthesizer.  It was used to debug the synthesizer.
+the synthesizer and to output a `.wav` file.  It was used to debug the synthesizer.
 
 The synthesizer commands are given as command-line arguments:
 
@@ -321,8 +321,11 @@ The synthesizer commands are given as command-line arguments:
   `A`
 * `reset` resets the ADSR state machine for the selected channel.
 
+Or, alternatively, you can pass all the above commands stored in a text file:
+* `-- NAME` loads and run the script, and skip all the remaining arguments.
+
 Once the `enable` bit-mask is set, the program loops, playing sound via
-`libao` and writing the samples to `out.raw` for later analysis until
+`libao` and writing the samples to `out.wav` for later analysis until
 all bits in the `enable` bit-mask are cleared by the ADSR state machines.
 
-When the program runs out of command line arguments, it exits.
+When the program runs out of command line arguments, or the script ends, it exits.
