@@ -29,8 +29,12 @@ struct voice_ch_t poly_voice[16];
 struct poly_synth_t synth;
 
 /* Read a script instead of command-line tokens */
-static void readScript(const char* name, int* argc, char*** argv) {
+static int readScript(const char* name, int* argc, char*** argv) {
 	FILE *fp = fopen(name, "r");
+	if (!fp) {
+		fprintf(stderr, "Failed to open script file: %s\n", name);
+		return 0;
+	}
    	char token[64];
 	int n = 0;
 	int size = 16;
@@ -45,6 +49,7 @@ static void readScript(const char* name, int* argc, char*** argv) {
 
 	*argv = list;
 	*argc = n;
+	return 1;
 }
 
 int main(int argc, char** argv) {
@@ -90,7 +95,9 @@ int main(int argc, char** argv) {
 		if (!strcmp(argv[0], "--")) {
 			const char* name = argv[1];
 			_DPRINTF("reading script %s\n", name);
-			readScript(name, &argc, &argv);
+			if (!readScript(name, &argc, &argv)) {
+				return 1;
+			}
 			// Fake item will be skipped at the end of the if
 			argc++;
 			argv--;
