@@ -28,14 +28,14 @@ const uint16_t synth_freq = 32000;
 struct voice_ch_t poly_voice[16];
 struct poly_synth_t synth;
 
-/* Read a script instead of command-line tokens */
-static int readScript(const char* name, int* argc, char*** argv) {
+/*! Read a script instead of command-line tokens */
+static int read_script(const char* name, int* argc, char*** argv) {
 	FILE *fp = fopen(name, "r");
 	if (!fp) {
 		fprintf(stderr, "Failed to open script file: %s\n", name);
 		return 0;
 	}
-   	char token[64];
+	char token[64];
 	int n = 0;
 	int size = 16;
 	char** list = malloc(size * sizeof(char*));
@@ -51,6 +51,7 @@ static int readScript(const char* name, int* argc, char*** argv) {
 	*argc = n;
 	return 1;
 }
+
 
 int main(int argc, char** argv) {
 	int voice = 0;
@@ -71,17 +72,20 @@ int main(int argc, char** argv) {
 	format.byte_format = AO_FMT_NATIVE;
 
 	ao_initialize();
-	int wavDriver = ao_driver_id("wav");
-	ao_device* wavDevice = ao_open_file(wavDriver, "out.wav", 1, &format, NULL);
-	if (!wavDevice) {
+	int wav_driver = ao_driver_id("wav");
+	ao_device* wav_device = ao_open_file(
+		wav_driver, "out.wav", 1, &format, NULL
+	);
+
+	if (!wav_device) {
 		fprintf(stderr, "Failed to open WAV device\n");
 		return 1;
 	}
 
-	ao_device* liveDevice = NULL;
-	int liveDriver = ao_default_driver_id();
-	liveDevice = ao_open_live(liveDriver, &format, NULL);
-	if (!liveDevice) {
+	ao_device* live_device = NULL;
+	int live_driver = ao_default_driver_id();
+	live_device = ao_open_live(live_driver, &format, NULL);
+	if (!live_device) {
 		printf("Live driver not available\n");
 	}
 
@@ -95,7 +99,7 @@ int main(int argc, char** argv) {
 		if (!strcmp(argv[0], "--")) {
 			const char* name = argv[1];
 			_DPRINTF("reading script %s\n", name);
-			if (!readScript(name, &argc, &argv)) {
+			if (!read_script(name, &argc, &argv)) {
 				return 1;
 			}
 			// Fake item will be skipped at the end of the if
@@ -240,7 +244,9 @@ int main(int argc, char** argv) {
 
 		while (synth.enable) {
 			int16_t* sample_ptr = samples;
-			uint16_t samples_remain = sizeof(samples) / sizeof(uint16_t);
+			uint16_t samples_remain = sizeof(samples)
+						/ sizeof(uint16_t);
+
 			/* Fill the buffer as much as we can */
 			while (synth.enable && samples_remain) {
 				_DPRINTF("enable = 0x%lx\n", synth.enable);
@@ -250,17 +256,21 @@ int main(int argc, char** argv) {
 				samples_sz++;
 				samples_remain--;
 			}
-			ao_play(wavDevice, (char*)samples, 2*samples_sz);
-			if (liveDevice) {
-				ao_play(liveDevice, (char*)samples, 2*samples_sz);
+			ao_play(wav_device, (char*)samples, 2*samples_sz);
+
+			if (live_device) {
+				ao_play(
+					live_device,
+					(char*)samples, 2*samples_sz
+				);
 			}
 			samples_sz = 0;
 		}
 	}
 
-	ao_close(wavDevice);
-	if (liveDevice) {
-		ao_close(liveDevice);
+	ao_close(wav_device);
+	if (live_device) {
+		ao_close(live_device);
 	}
 	ao_shutdown();
 	return 0;
