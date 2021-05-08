@@ -33,6 +33,14 @@
 /* Amplitude scaling */
 #define VOICE_WF_AMP_SCALE	(8)
 
+/*!
+ * Number of fractional bits for `period` and `period_remain`.
+ * This allows tuned notes even in lower sampling frequencies.
+ * The integer part (12 bits) is wide enough to render a 20Hz 
+ * note on the higher 48kHz sampling frequency.
+ */
+#define PERIOD_FP_SCALE 	(4)
+
 int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 	switch(wf_gen->mode) {
 		case VOICE_MODE_DC:
@@ -48,12 +56,12 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 					wf_gen->sample);
 			break;
 		case VOICE_MODE_SQUARE:
-			if (!wf_gen->period_remain) {
+			if ((wf_gen->period_remain >> PERIOD_FP_SCALE) == 0) {
 				/* Swap value */
 				wf_gen->sample = -wf_gen->sample;
-				wf_gen->period_remain = wf_gen->period;
+				wf_gen->period_remain += wf_gen->period;
 			} else {
-				wf_gen->period_remain--;
+				wf_gen->period_remain -= (1 << PERIOD_FP_SCALE);
 			}
 			_DPRINTF("wf=%p mode=SQUARE amp=%d rem=%d "
 					"→ sample=%d\n",
@@ -62,13 +70,13 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 					wf_gen->sample);
 			break;
 		case VOICE_MODE_SAWTOOTH:
-			if (!wf_gen->period_remain) {
+			if ((wf_gen->period_remain >> PERIOD_FP_SCALE) == 0) {
 				/* Back to -amplitude */
 				wf_gen->sample = -wf_gen->amplitude;
-				wf_gen->period_remain = wf_gen->period;
+				wf_gen->period_remain += wf_gen->period;
 			} else {
 				wf_gen->sample += wf_gen->step;
-				wf_gen->period_remain--;
+				wf_gen->period_remain -= (1 << PERIOD_FP_SCALE);
 			}
 			_DPRINTF("wf=%p mode=SAWTOOTH amp=%d rem=%d step=%d "
 					"→ sample=%d\n",
@@ -77,17 +85,17 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 					wf_gen->sample);
 			break;
 		case VOICE_MODE_TRIANGLE:
-			if (!wf_gen->period_remain) {
+			if ((wf_gen->period_remain >> PERIOD_FP_SCALE) == 0) {
 				/* Switch direction */
 				if (wf_gen->step > 0)
 					wf_gen->sample = wf_gen->amplitude;
 				else
 					wf_gen->sample = -wf_gen->amplitude;
 				wf_gen->step = -wf_gen->step;
-				wf_gen->period_remain = wf_gen->period;
+				wf_gen->period_remain += wf_gen->period;
 			} else {
 				wf_gen->sample += wf_gen->step;
-				wf_gen->period_remain--;
+				wf_gen->period_remain -= (1 << PERIOD_FP_SCALE);
 			}
 			_DPRINTF("wf=%p mode=TRIANGLE amp=%d rem=%d step=%d "
 					"→ sample=%d\n",
@@ -102,15 +110,8 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 
 /* Compute frequency period (sawtooth wave) */
 static uint16_t voice_wf_calc_sawtooth_period(uint16_t freq) {
-#if SYNTH_FREQ_SCALE > 0
-	/*
-	 * Cast synth_freq to 32-bits in case we overflow in the right-shift.
-	 * Yes, this is going to hurt!
-	 */
-	return (((uint32_t)(synth_freq << SYNTH_FREQ_SCALE)) / freq);
-#else
-	return (synth_freq / freq);
-#endif
+	/* Use 16-bit 12.4 fixed point */  
+	return (((uint32_t)(synth_freq << PERIOD_FP_SCALE)) / freq);
 }
 
 /* Compute frequency period (square/triangle wave) */
@@ -146,7 +147,7 @@ void voice_wf_set_sawtooth(struct voice_wf_gen_t* const wf_gen,
 	wf_gen->period = voice_wf_calc_sawtooth_period(freq);
 	wf_gen->period_remain = wf_gen->period;
 	wf_gen->amplitude = -wf_gen->sample;
-	wf_gen->step = ((int32_t)(wf_gen->amplitude << 1)) / wf_gen->period;
+	wf_gen->step = (wf_gen->amplitude / (wf_gen->period >> PERIOD_FP_SCALE)) << 1;
 	_DPRINTF("wf=%p INIT mode=SAWTOOTH amp=%d per=%d step=%d rem=%d "
 			"→ sample=%d\n",
 			wf_gen, wf_gen->amplitude, wf_gen->period,
@@ -161,7 +162,7 @@ void voice_wf_set_triangle(struct voice_wf_gen_t* const wf_gen,
 	wf_gen->period = voice_wf_calc_square_period(freq);
 	wf_gen->period_remain = wf_gen->period;
 	wf_gen->amplitude = -wf_gen->sample;
-	wf_gen->step = ((int32_t)(wf_gen->amplitude << 1)) / wf_gen->period;
+	wf_gen->step = (wf_gen->amplitude / (wf_gen->period >> PERIOD_FP_SCALE)) << 1;
 	_DPRINTF("wf=%p INIT mode=TRIANGLE amp=%d per=%d step=%d rem=%d "
 			"→ sample=%d\n",
 			wf_gen, wf_gen->amplitude, wf_gen->period,

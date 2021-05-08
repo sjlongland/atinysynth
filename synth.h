@@ -41,22 +41,6 @@ extern const uint16_t __attribute__((weak)) synth_freq;
 #define synth_freq		SYNTH_FREQ
 #endif
 
-#ifdef SYNTH_FREQ_SCALE
-/*!
- * Amount of scaling to apply to synthesizer output frequencies.  This
- * right-shifts frequencies, allowing for some bits to be used to indicate
- * fractional components, trading off frequency range for precision.
- *
- * Precision is 1/(2^SYNTH_FREQ_SCALE) Hz.
- * Range is 0-((65536/(2^SYNTH_FREQ_SCALE))-1).
- *
- * The default of 0 applies no scaling, allowing (integer) frequencies between
- * 0 and 65.535 kHz.  The value 1 multiplies everything by two, allowing
- * frequencies between 0 and 32.767kHz with 500mHz precision.
- */
-#define SYNTH_FREQ_SCALE (0)
-#endif
-
 /*!
  * Polyphonic synthesizer structure
  */

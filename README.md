@@ -157,8 +157,10 @@ wish to use the ADSR envelope generator only to modulate lights.
 Configures the waveform generator to generate a square wave.
 
 `sample` is initialised as `+amplitude`, and the half-period is
-computed as `period=SYNTH_FREQ/(2*freq)`.  `period_remain` is
+computed as `period=SYNTH_FREQ/(2*freq)`. `period_remain` is
 initialised to `period`.
+
+Fixed-point `12.4` format (16 bit) is used to store the period counters, to allow tuned notes on low sampling rates too.
 
 Each sample, `period_remain` is decremented.  When `period_remain`
 reaches zero:

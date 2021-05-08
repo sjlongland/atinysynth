@@ -29,10 +29,10 @@ struct voice_wf_gen_t {
 	int16_t sample;
 	/*! Amplitude sample in fixed point */
 	int16_t amplitude;
-	/*! Samples to next waveform period */
+	/*! Samples to next waveform period (12.4 fixed point) */
 	uint16_t period_remain;
 	/*!
-	 * Period duration in samples.
+	 * Period duration in samples (12.4 fixed point).
 	 * (Half period for SQUARE and TRIANGLE)
 	 */
 	uint16_t period;
