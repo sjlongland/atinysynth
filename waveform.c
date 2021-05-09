@@ -101,7 +101,7 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 }
 
 /* Compute frequency period (sawtooth wave) */
-static uint8_t voice_wf_calc_sawtooth_period(uint16_t freq) {
+static uint16_t voice_wf_calc_sawtooth_period(uint16_t freq) {
 #if SYNTH_FREQ_SCALE > 0
 	/*
 	 * Cast synth_freq to 32-bits in case we overflow in the right-shift.
@@ -114,7 +114,7 @@ static uint8_t voice_wf_calc_sawtooth_period(uint16_t freq) {
 }
 
 /* Compute frequency period (square/triangle wave) */
-static uint8_t voice_wf_calc_square_period(uint16_t freq) {
+static uint16_t voice_wf_calc_square_period(uint16_t freq) {
 	return voice_wf_calc_sawtooth_period(freq) >> 1;
 }
 
