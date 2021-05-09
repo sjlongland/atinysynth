@@ -64,8 +64,7 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 		case VOICE_MODE_SAWTOOTH:
 			if (!wf_gen->period_remain) {
 				/* Back to -amplitude */
-				wf_gen->sample = -wf_gen->amplitude
-					<< VOICE_WF_AMP_SCALE;
+				wf_gen->sample = -wf_gen->amplitude;
 				wf_gen->period_remain = wf_gen->period;
 			} else {
 				wf_gen->sample += wf_gen->step;
