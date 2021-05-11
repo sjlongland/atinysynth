@@ -47,13 +47,9 @@
 #define ADSR_INFINITE			UINT8_MAX
 
 /*!
- * ADSR Envelope Generator data.  20 bytes.
+ * ADSR Envelope Generator definition.  11 bytes.
  */
-struct adsr_env_gen_t {
-	/*! Time to next event, samples.  UINT32_MAX = infinite */
-	uint32_t next_event;
-	/*! Time step, samples */
-	uint16_t time_step;
+struct adsr_env_def_t {
 	/*! Time scale, samples per unit */
 	uint32_t time_scale;
 	/*! Delay period, time units.  UINT8_MAX = infinite */
@@ -70,12 +66,24 @@ struct adsr_env_gen_t {
 	uint8_t peak_amp;
 	/*! Sustain amplitude */
 	uint8_t sustain_amp;
-	/*! Present amplitude */
-	uint8_t amplitude;
+};
+
+/*!
+ * ADSR Envelope Generator data.  20 bytes.
+ */
+struct adsr_env_gen_t {
+	/*! Definition */
+	struct adsr_env_def_t def;
+	/*! Time to next event, samples.  UINT32_MAX = infinite */
+	uint32_t next_event;
+	/*! Time step, samples */
+	uint16_t time_step;
 	/*! ADSR state */
 	uint8_t state;
 	/*! ADSR counter */
 	uint8_t counter;
+	/*! Present amplitude */
+	uint8_t amplitude;
 };
 
 /*!
@@ -105,21 +113,8 @@ static inline void adsr_reset(struct adsr_env_gen_t* const adsr) {
 /*!
  * Configure the ADSR.
  */
-static inline void adsr_config(struct adsr_env_gen_t* const adsr,
-		uint32_t time_scale, uint8_t delay_time,
-		uint8_t attack_time, uint8_t decay_time,
-		uint8_t sustain_time, uint8_t release_time,
-		uint8_t peak_amp, uint8_t sustain_amp) {
-
-	adsr->time_scale = time_scale;
-	adsr->delay_time = delay_time;
-	adsr->attack_time = attack_time;
-	adsr->decay_time = decay_time;
-	adsr->sustain_time = sustain_time;
-	adsr->release_time = release_time;
-	adsr->peak_amp = peak_amp;
-	adsr->sustain_amp = sustain_amp;
-
+static inline void adsr_config(struct adsr_env_gen_t* const adsr, struct adsr_env_def_t* const def) {
+	adsr->def = *def;
 	adsr_reset(adsr);
 }
 

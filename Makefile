@@ -24,7 +24,7 @@ $(BINDIR)/synth: $(OBJECTS) $(OBJDIR)/poly.a
 	@[ -d $(BINDIR) ] || mkdir -p $(BINDIR)
 	$(CC) -g -o $@ $(LDFLAGS) $(LIBS) $^
 
-$(OBJDIR)/poly.a: $(OBJDIR)/adsr.o $(OBJDIR)/waveform.o
+$(OBJDIR)/poly.a: $(OBJDIR)/adsr.o $(OBJDIR)/waveform.o $(OBJDIR)/mml.o $(OBJDIR)/sequencer.o
 	$(AR) rcs $@ $^
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c

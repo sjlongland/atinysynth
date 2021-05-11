@@ -1,0 +1,73 @@
+# Title: Loreley
+# Composer: Ph. Friedrich Silcher (1789–1860), 1837
+# Lyrics: Heinrich Heine (1797–1856), 1824
+# Arranger: Klavier: August Linder; MML: mirabilos
+# Encoder: mirabilos, 2016
+# Copyright: MML encoding & arrangement © 2016 mirabilos, published under The MirOS Licence; copyright for text, music, and piano arrangement has expired
+# Source: Linder, August (Hrsg.): Deutsche Weisen : Die beliebtesten Volks- und geistlichen Lieder. Stuttgart: Albert Auer’s Musikverlag, n.d., c. 1900.
+# Instruments: Piano, Voice
+# MML Tracks: 4 (5)
+# Verses: 3
+# Language: German
+# Tempo: Andante
+# Time Signature: 6/8
+# Key Signature: C Major
+# Pickup Measure: 1/8
+# Measures: 16
+
+## Structure:
+# Track 1: voice track
+# Text embedded here, as comments (not exported) – roughly note-aligned
+# Track 2: usually lowest voice double, except in bar 12
+# Track 3: occasional helper
+# Track 4: bass background
+
+A o2t76l8 g | mlg.   mna16 g ml>c<  mnb   a |   g4.            f4         f |
+# 1.  Ich   weiß  nicht, was soll  es  be-    deu-           ten,     daß
+# 2.  Die   schön-______ ste Jung-___frau     si-            tzet    dort
+# 3.  Den   Schif-______ fer im  klei-nen     Schif-         fe       er-
+B o2t76l8 p | mle.   mnf16 e mlf    mnf   f |   e4.            d4         d |
+C o1t76l8 p | p2.                           | p2.                           |
+D o1t76l8 p | mlc16g16>c<mng mlc16a16>d<mnb | mlc16g16>c<mng ml<f16>f16amnf |
+
+A  e.    e16 e mldmnc d  | mle4. mnep g | mlg.   mna16 g ml>c<  mnb   a |
+#  ich______ so trau-_rig  bin?_____  Ein Mähr-  chen  aus  al-____ ten
+#  o-_______ ben wun-_der- bar,_____  ihr gold’- nes   Ge-  schmei-_ de
+#  greift es mit wil-_dem  Weh,_____  er  schaut nicht die  Fel-___ sen-
+B   c.    c16 c<mlbmna b> | mlc4. mncp p | mle.   mnf16 e mlf    mnf   f |
+C p4.              g4   g  | mlg ppmnp4 p | p2.                           |
+D ml<g16>e16gmne  <g4   g> | mlc<gemnc4>p | mlc16g16>c<mng mlc16a16>d<mnb |
+
+A g4.            f4         f | e.   e16 e   g     f   d  | mlc4. mncp e |
+# Zei-           ten,     das kommt_____ mir nicht aus dem Sinn._____  Die
+# bli-           tzet,    sie kämmt_____ ihr gol-  de- nes Haar._____  Sie
+# rif-           fe,       er schaut nur hin-auf   in  die Höh’._____  Ich
+B e4.            d4         d | c.   c16 c  <b     b   b  | p2.          |
+C p2.                           | p   p    p   d     d   f  | mle ppmnp4 p |
+D mlc16g16>c<mng ml<f16>f16amnf |<g>  g    c  <g     g   g> | mlc<egmnc4 p |
+
+A mld.  mne16  d   g    d   d  |   b4.      a4   a |    g4   g mlf#mng   a   |
+# Luft_____  ist kühl und es     dun-   kelt und      ru-hig fließt___ der
+# kämmt es   mit gol- de- nem    Kam-     me und   singt ein Lied_____ da-
+# glau- be,  die Wel- len ver-   schlin- gen  am      En- de Schif-fer und
+B mlb.> mnc16< b   b    b   b  |  >d4.      c4   c |   <b4   p mlamn b>  c<< |
+C   p   p      p  >d    p   p  |   g4.      e4   e |    d4   d<d4        d   |
+D mlg>  d    mng<mlg>   d mng< | mlg>dmng<mlc>emna | ml<d>dmnb p4        f#  |
+
+# The next measure missed an o1g as last eighth, to fit on four tracks
+# (but it’s doubled by the o2g in the vocals, so it’s okay musically)
+A mlg4.mng4  g  |   g.     a16 g>mlc<mn   b   a |
+# Rhein;__ der    Gi-   pfel des Ber-____ ges
+# bei;____ das    hat     ei-ne wun-_____ der-
+# Kahn,___ und    das    hat mit ih-_____ rem
+B mlgb>cdc<mnb  | >>e.     f16 e mlfmn    f   f |
+C mld4.mnd4> f< | p2.                           |
+D mlb>defe mnd< | mlc16g16>c<mng mlc16a16>d<mnb | l16
+
+A mlg4mn>   e     d4       d  |    c.     c16c ml<b mna b | ml>c4.mncp ||
+# fun-______    kelt     im      A-_______ bend-son-_ nen-schein.__
+# sa-_______    me,      ge-     wal-   ti-ge   Me-__ lo- dei._____
+# Sin-______    gen     die      Lo-______ re-_ ley__ ge- than.____
+B mle4mn    g     f4       f  |    e.     e16e ml f mnf f | ml e4.mnep ||
+C p2.                         |    p     p   p    g   g g | ml gppmnpp ||
+D mlcg>mnc<pp8 ml<f>a>mnd<pp8 | ml<g>g>mncpl8p    d   c d | ml<cegmncp ||

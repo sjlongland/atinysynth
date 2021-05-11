@@ -23,13 +23,6 @@
 #include "debug.h"
 #include <stdlib.h>
 
-/* Waveform generation modes */
-#define VOICE_MODE_DC		(0)
-#define	VOICE_MODE_SQUARE	(1)
-#define VOICE_MODE_SAWTOOTH	(2)
-#define VOICE_MODE_TRIANGLE	(3)
-#define VOICE_MODE_NOISE	(4)
-
 /* Amplitude scaling */
 #define VOICE_WF_AMP_SCALE	(8)
 
@@ -109,16 +102,15 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 }
 
 /* Compute frequency period (sawtooth wave) */
-static uint16_t voice_wf_calc_sawtooth_period(uint16_t freq) {
+uint16_t voice_wf_freq_to_period(uint16_t freq) {
 	/* Use 16-bit 12.4 fixed point */
 	return (((uint32_t)(synth_freq << PERIOD_FP_SCALE)) / freq);
 }
 
 /* Compute frequency period (square/triangle wave) */
-static uint16_t voice_wf_calc_square_period(uint16_t freq) {
-	return voice_wf_calc_sawtooth_period(freq) >> 1;
+static uint16_t voice_wf_to_square_period(uint16_t period) {
+	return period >> 1;
 }
-
 
 void voice_wf_set_dc(struct voice_wf_gen_t* const wf_gen,
 		int8_t amplitude) {
@@ -126,11 +118,11 @@ void voice_wf_set_dc(struct voice_wf_gen_t* const wf_gen,
 	wf_gen->amplitude = amplitude;
 }
 
-void voice_wf_set_square(struct voice_wf_gen_t* const wf_gen,
-		uint16_t freq, int8_t amplitude) {
+static void voice_wf_set_square_p(struct voice_wf_gen_t* const wf_gen,
+		uint16_t period, int8_t amplitude) {
 	wf_gen->mode = VOICE_MODE_SQUARE;
 	wf_gen->amplitude = (int16_t)amplitude << VOICE_WF_AMP_SCALE;
-	wf_gen->period = voice_wf_calc_square_period(freq);
+	wf_gen->period = voice_wf_to_square_period(period);
 	wf_gen->period_remain = wf_gen->period;
 	wf_gen->sample = wf_gen->amplitude;
 	_DPRINTF("wf=%p INIT mode=SQUARE amp=%d per=%d rem=%d "
@@ -140,11 +132,17 @@ void voice_wf_set_square(struct voice_wf_gen_t* const wf_gen,
 			wf_gen->sample);
 }
 
-void voice_wf_set_sawtooth(struct voice_wf_gen_t* const wf_gen,
+void voice_wf_set_square(struct voice_wf_gen_t* const wf_gen,
 		uint16_t freq, int8_t amplitude) {
+	uint16_t period = voice_wf_freq_to_period(freq);
+	voice_wf_set_square_p(wf_gen, period, amplitude);
+}
+
+static void voice_wf_set_sawtooth_p(struct voice_wf_gen_t* const wf_gen,
+		uint16_t period, int8_t amplitude) {
 	wf_gen->mode = VOICE_MODE_SAWTOOTH;
 	wf_gen->sample = -(int16_t)amplitude << VOICE_WF_AMP_SCALE;
-	wf_gen->period = voice_wf_calc_sawtooth_period(freq);
+	wf_gen->period = period;
 	wf_gen->period_remain = wf_gen->period;
 	wf_gen->amplitude = -wf_gen->sample;
 	wf_gen->step = (wf_gen->amplitude / (wf_gen->period >> PERIOD_FP_SCALE)) << 1;
@@ -155,11 +153,17 @@ void voice_wf_set_sawtooth(struct voice_wf_gen_t* const wf_gen,
 			wf_gen->sample);
 }
 
-void voice_wf_set_triangle(struct voice_wf_gen_t* const wf_gen,
+void voice_wf_set_sawtooth(struct voice_wf_gen_t* const wf_gen,
 		uint16_t freq, int8_t amplitude) {
+	uint16_t period = voice_wf_freq_to_period(freq);
+	voice_wf_set_sawtooth_p(wf_gen, period, amplitude);
+}
+
+static void voice_wf_set_triangle_p(struct voice_wf_gen_t* const wf_gen,
+		uint16_t period, int8_t amplitude) {
 	wf_gen->mode = VOICE_MODE_TRIANGLE;
 	wf_gen->sample = -(int16_t)amplitude << VOICE_WF_AMP_SCALE;
-	wf_gen->period = voice_wf_calc_square_period(freq);
+	wf_gen->period = voice_wf_to_square_period(period);
 	wf_gen->period_remain = wf_gen->period;
 	wf_gen->amplitude = -wf_gen->sample;
 	wf_gen->step = (wf_gen->amplitude / (wf_gen->period >> PERIOD_FP_SCALE)) << 1;
@@ -170,11 +174,38 @@ void voice_wf_set_triangle(struct voice_wf_gen_t* const wf_gen,
 			wf_gen->sample);
 }
 
+void voice_wf_set_triangle(struct voice_wf_gen_t* const wf_gen,
+		uint16_t freq, int8_t amplitude) {
+	uint16_t period = voice_wf_freq_to_period(freq);
+	voice_wf_set_triangle_p(wf_gen, period, amplitude);
+}
+
 void voice_wf_set_noise(struct voice_wf_gen_t* const wf_gen,
 		int8_t amplitude) {
 	wf_gen->mode = VOICE_MODE_NOISE;
 	wf_gen->amplitude = amplitude;
 }
+
+void voice_wf_set(struct voice_wf_gen_t* const wf_gen, struct voice_wf_def_t* const wf_def) {
+	switch (wf_def->mode) {
+		case VOICE_MODE_DC:
+			voice_wf_set_dc(wf_gen, wf_def->amplitude);
+			break;
+		case VOICE_MODE_SQUARE:
+			voice_wf_set_square_p(wf_gen, wf_def->period, wf_def->amplitude);
+			break;
+		case VOICE_MODE_SAWTOOTH:
+			voice_wf_set_sawtooth_p(wf_gen, wf_def->period, wf_def->amplitude);
+			break;
+		case VOICE_MODE_TRIANGLE:
+			voice_wf_set_triangle_p(wf_gen, wf_def->period, wf_def->amplitude);
+			break;
+		case VOICE_MODE_NOISE:
+			voice_wf_set_noise(wf_gen, wf_def->amplitude);
+			break;
+	}
+}
+
 /*
  * vim: set sw=8 ts=8 noet si tw=72
  */

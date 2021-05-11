@@ -17,6 +17,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
  * MA  02110-1301  USA
  */
+#ifndef _VOICE_H
+#define _VOICE_H
 
 #include "waveform.h"
 #include "adsr.h"
@@ -71,3 +73,5 @@ inline static int8_t voice_ch_next(struct voice_ch_t* const voice) {
 /*
  * vim: set sw=8 ts=8 noet si tw=72
  */
+
+#endif

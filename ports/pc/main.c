@@ -20,13 +20,20 @@
 
 #include "synth.h"
 #include "debug.h"
+#include "sequencer.h"
+#include "mml.h"
 #include <stdio.h>
 #include <string.h>
 #include <ao/ao.h>
 
 const uint16_t synth_freq = 32000;
-struct voice_ch_t poly_voice[16];
-struct poly_synth_t synth;
+static struct voice_ch_t poly_voice[16];
+static struct poly_synth_t synth;
+static int16_t samples[8192];
+static uint16_t samples_sz = 0;
+static void (*feed_channels)(struct poly_synth_t* synth) = NULL;
+static FILE* seq_stream;
+static struct seq_stream_header_t seq_stream_header;
 
 /*! Read a script instead of command-line tokens */
 static int read_script(const char* name, int* argc, char*** argv) {
@@ -52,11 +59,80 @@ static int read_script(const char* name, int* argc, char*** argv) {
 	return 1;
 }
 
+/* Read and play a MML file */
+static void mml_error(const char* err, int line, int column) {
+	fprintf(stderr, "Error reading MML file: %s at line %d, pos %d\n", err, line, column);
+}
+
+static int open_mml(const char* name) {
+	FILE *fp = fopen(name, "r");
+	if (!fp) {
+		fprintf(stderr, "Error reading MML file: %s", name);
+		return 1;
+	}
+	fseek(fp, 0, SEEK_END);
+	long size = ftell(fp);
+   	char* content = malloc(size + 1);
+	fseek(fp, 0, SEEK_SET);
+	fread(content, 1, size, fp);
+	content[size] = 0;
+
+	mml_set_error_handler(mml_error);
+	int err;
+
+	struct seq_frame_map_t map;
+	err = mml_compile(content, &map);
+	if (err) {
+		return err;
+	}
+	free(content);
+
+	// Sort frames in stream
+	struct seq_frame_t* frame_stream;
+	int frame_count;
+	int voice_count;
+	seq_compile(&map, &frame_stream, &frame_count, &voice_count);
+	mml_free(&map);
+
+	// Save the compiled output to out.seq
+	FILE *out = fopen("sequencer.bin", "wb");
+	if (!out) {
+		fprintf(stderr, "Cannot write the sequencer.bin file\n");
+		return 1;
+	}
+	seq_stream_header.synth_frequency = synth_freq;
+	seq_stream_header.frames = frame_count;
+	seq_stream_header.voices = voice_count;
+	fwrite(&seq_stream_header, 1, sizeof(struct seq_stream_header_t), out);
+	fwrite(frame_stream, frame_count, sizeof(struct seq_frame_t), out);
+	_DPRINTF("File sequencer.bin written\n");
+	fclose(out);
+
+	seq_free(frame_stream);
+	return err;
+}
+
+static uint8_t seq_read_frame(struct seq_frame_t* frame) {
+	return fread(frame, 1, sizeof(struct seq_frame_t), seq_stream) == sizeof(struct seq_frame_t);
+}
+
+static int open_seq(const char* name) {
+	seq_stream = fopen(name, "rb");
+	if (!seq_stream) {
+		fprintf(stderr, "Error reading sequencer file: %s", name);
+		return 1;
+	}
+
+	fread(&seq_stream_header, 1, sizeof(struct seq_stream_header_t), seq_stream);
+
+	int err = seq_play_stream(&seq_stream_header, sizeof(poly_voice) / sizeof(struct voice_ch_t), &synth);
+	feed_channels = seq_feed_synth;
+	seq_set_stream_require_handler(seq_read_frame);
+	return err;
+}
 
 int main(int argc, char** argv) {
 	int voice = 0;
-	int16_t samples[8192];
-	uint16_t samples_sz = 0;
 
 	synth.voice = poly_voice;
 	synth.enable = 0;
@@ -105,7 +181,27 @@ int main(int argc, char** argv) {
 			// Fake item will be skipped at the end of the if
 			argc++;
 			argv--;
-		
+
+		/* Check for MML compilation only */
+		} else if (!strcmp(argv[0], "compile-mml")) {
+			const char* name = argv[1];
+			_DPRINTF("compiling MML %s\n", name);
+			
+			return open_mml(name);
+
+		/* Check for sequencer file play */
+		} else if (!strcmp(argv[0], "sequencer")) {
+			const char* name = argv[1];
+			_DPRINTF("playing sequencer file %s\n", name);
+			
+			int err = open_seq(name);
+			if (err) {
+				return err;
+			}
+
+			argv++;
+			argc--;
+
 		/* Voice selection */
 		} else if (!strcmp(argv[0], "voice")) {
 			voice = atoi(argv[1]);
@@ -177,56 +273,56 @@ int main(int argc, char** argv) {
 			int scale = atoi(argv[1]);
 			_DPRINTF("channel %d ADSR scale %d samples\n",
 					voice, scale);
-			poly_voice[voice].adsr.time_scale = scale;
+			poly_voice[voice].adsr.def.time_scale = scale;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "delay")) {
 			int time = atoi(argv[1]);
 			_DPRINTF("channel %d ADSR delay %d units\n",
 					voice, time);
-			poly_voice[voice].adsr.delay_time = time;
+			poly_voice[voice].adsr.def.delay_time = time;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "attack")) {
 			int time = atoi(argv[1]);
 			_DPRINTF("channel %d ADSR attack %d units\n",
 					voice, time);
-			poly_voice[voice].adsr.attack_time = time;
+			poly_voice[voice].adsr.def.attack_time = time;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "decay")) {
 			int time = atoi(argv[1]);
 			_DPRINTF("channel %d ADSR decay %d units\n",
 					voice, time);
-			poly_voice[voice].adsr.decay_time = time;
+			poly_voice[voice].adsr.def.decay_time = time;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "sustain")) {
 			int time = atoi(argv[1]);
 			_DPRINTF("channel %d ADSR sustain %d units\n",
 					voice, time);
-			poly_voice[voice].adsr.sustain_time = time;
+			poly_voice[voice].adsr.def.sustain_time = time;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "release")) {
 			int time = atoi(argv[1]);
 			_DPRINTF("channel %d ADSR release %d units\n",
 					voice, time);
-			poly_voice[voice].adsr.release_time = time;
+			poly_voice[voice].adsr.def.release_time = time;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "peak")) {
 			int amp = atoi(argv[1]);
 			_DPRINTF("channel %d ADSR peak amplitude %d\n",
 					voice, amp);
-			poly_voice[voice].adsr.peak_amp = amp;
+			poly_voice[voice].adsr.def.peak_amp = amp;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "samp")) {
 			int amp = atoi(argv[1]);
 			_DPRINTF("channel %d ADSR sustain amplitude %d\n",
 					voice, amp);
-			poly_voice[voice].adsr.sustain_amp = amp;
+			poly_voice[voice].adsr.def.sustain_amp = amp;
 			argv++;
 			argc--;
 		} else if (!strcmp(argv[0], "reset")) {
@@ -238,6 +334,10 @@ int main(int argc, char** argv) {
 		argc--;
 
 		/* Play out any remaining samples */
+		if (feed_channels) {
+			feed_channels(&synth);
+		}
+
 		if (synth.enable)
 			_DPRINTF("----- Start playback (0x%lx) -----\n",
 					synth.enable);
@@ -255,6 +355,9 @@ int main(int argc, char** argv) {
 				sample_ptr++;
 				samples_sz++;
 				samples_remain--;
+				if (feed_channels) {
+					feed_channels(&synth);
+				}
 			}
 			ao_play(wav_device, (char*)samples, 2*samples_sz);
 

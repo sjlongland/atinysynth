@@ -43,6 +43,28 @@ struct voice_wf_gen_t {
 	uint8_t mode;
 };
 
+/* Waveform generation modes */
+#define VOICE_MODE_DC		(0)
+#define	VOICE_MODE_SQUARE	(1)
+#define VOICE_MODE_SAWTOOTH	(2)
+#define VOICE_MODE_TRIANGLE	(3)
+#define VOICE_MODE_NOISE	(4)
+
+/**
+ * The Waveform definition. 4 bytes.
+ */ 
+struct voice_wf_def_t {
+	/*! Waveform generation mode, see VOICE_MODE_ enumerated values */
+	uint8_t mode;
+	/*! Waveform amplitude */
+	int8_t amplitude;
+	/*! Waveform full period as `sample_freq / frequency` (if applicable) */
+	uint16_t period;
+};
+
+/* Compute frequency period of a generic wave */
+uint16_t voice_wf_freq_to_period(uint16_t frequency);
+
 /*!
  * Configure the generator for a DC offset synthesis.
  */
@@ -72,6 +94,11 @@ void voice_wf_set_triangle(struct voice_wf_gen_t* const wf_gen,
  */
 void voice_wf_set_noise(struct voice_wf_gen_t* const wf_gen,
 		int8_t amplitude);
+
+/*!
+ * Configure the generator using waveform type and common parameters
+ */
+void voice_wf_set(struct voice_wf_gen_t* const wf_gen, struct voice_wf_def_t* const wf_def);
 
 /*!
  * Retrieve the next sample from the generator.
