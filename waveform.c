@@ -36,7 +36,7 @@
 /*!
  * Number of fractional bits for `period` and `period_remain`.
  * This allows tuned notes even in lower sampling frequencies.
- * The integer part (12 bits) is wide enough to render a 20Hz 
+ * The integer part (12 bits) is wide enough to render a 20Hz
  * note on the higher 48kHz sampling frequency.
  */
 #define PERIOD_FP_SCALE 	(4)
@@ -110,7 +110,7 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 
 /* Compute frequency period (sawtooth wave) */
 static uint16_t voice_wf_calc_sawtooth_period(uint16_t freq) {
-	/* Use 16-bit 12.4 fixed point */  
+	/* Use 16-bit 12.4 fixed point */
 	return (((uint32_t)(synth_freq << PERIOD_FP_SCALE)) / freq);
 }
 
