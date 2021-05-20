@@ -104,7 +104,7 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 /* Compute frequency period (sawtooth wave) */
 uint16_t voice_wf_freq_to_period(uint16_t freq) {
 	/* Use 16-bit 12.4 fixed point */
-	return (((uint32_t)(synth_freq << PERIOD_FP_SCALE)) / freq);
+	return (((uint32_t)synth_freq << PERIOD_FP_SCALE) / freq);
 }
 
 /* Compute frequency period (square/triangle wave) */
