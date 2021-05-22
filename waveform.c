@@ -53,9 +53,8 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 				/* Swap value */
 				wf_gen->sample = -wf_gen->sample;
 				wf_gen->period_remain += wf_gen->period;
-			} else {
-				wf_gen->period_remain -= (1 << PERIOD_FP_SCALE);
 			}
+			wf_gen->period_remain -= (1 << PERIOD_FP_SCALE);
 			_DPRINTF("wf=%p mode=SQUARE amp=%d rem=%d "
 					"→ sample=%d\n",
 					wf_gen, wf_gen->amplitude,
@@ -69,8 +68,8 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 				wf_gen->period_remain += wf_gen->period;
 			} else {
 				wf_gen->sample += wf_gen->step;
-				wf_gen->period_remain -= (1 << PERIOD_FP_SCALE);
 			}
+			wf_gen->period_remain -= (1 << PERIOD_FP_SCALE);
 			_DPRINTF("wf=%p mode=SAWTOOTH amp=%d rem=%d step=%d "
 					"→ sample=%d\n",
 					wf_gen, wf_gen->amplitude,
@@ -88,8 +87,8 @@ int8_t voice_wf_next(struct voice_wf_gen_t* const wf_gen) {
 				wf_gen->period_remain += wf_gen->period;
 			} else {
 				wf_gen->sample += wf_gen->step;
-				wf_gen->period_remain -= (1 << PERIOD_FP_SCALE);
 			}
+			wf_gen->period_remain -= (1 << PERIOD_FP_SCALE);
 			_DPRINTF("wf=%p mode=TRIANGLE amp=%d rem=%d step=%d "
 					"→ sample=%d\n",
 					wf_gen, wf_gen->amplitude,
