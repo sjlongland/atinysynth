@@ -61,14 +61,22 @@ int main(void) {
 	voice_wf_set_triangle(&poly_voice[1].wf, 659, 63);
 	voice_wf_set_triangle(&poly_voice[2].wf, 784, 63);
 	voice_wf_set_triangle(&poly_voice[3].wf, 880, 63);
-	adsr_config(&poly_voice[0].adsr,
-			100, 0, 10, 10, 10, 10, 255, 192);
-	adsr_config(&poly_voice[1].adsr,
-			100, 0, 10, 10, 10, 10, 255, 192);
-	adsr_config(&poly_voice[2].adsr,
-			100, 0, 10, 10, 10, 10, 255, 192);
-	adsr_config(&poly_voice[3].adsr,
-			100, 0, 10, 10, 10, 10, 255, 192);
+
+	struct adsr_env_def_t voice_def = {
+		.time_scale = 100,
+		.delay_time = 0,
+		.attack_time = 10,
+		.decay_time = 10,
+		.sustain_time = 10,
+		.release_time = 10,
+		.peak_amp = 255,
+		.sustain_amp = 192
+	};
+
+	adsr_config(&poly_voice[0].adsr, &voice_def);
+	adsr_config(&poly_voice[1].adsr, &voice_def);
+	adsr_config(&poly_voice[2].adsr, &voice_def);
+	adsr_config(&poly_voice[3].adsr, &voice_def);
 	synth.enable = 0x0;
 
 	sei();
