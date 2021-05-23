@@ -63,6 +63,20 @@ static volatile uint16_t amp_powerdown = 0;
 #define CHANNELS	(8)
 
 /*!
+ * Voice definitions for all the channels.
+ */
+const struct adsr_env_def_t voice_def = {
+	.time_scale = 100,
+	.delay_time = 0,
+	.attack_time = 10,
+	.decay_time = 10,
+	.sustain_time = ADSR_INFINITE,
+	.release_time = 10,
+	.peak_amp = 255,
+	.sustain_amp = 192
+};
+
+/*!
  * I/O channel frequencies, note frequencies
  * from http://www.phy.mtu.edu/~suits/notefreqs.html
  */
@@ -101,9 +115,7 @@ static void trigger_button(uint8_t b) {
 
 	if (voice) {
 		uint16_t freq = pgm_read_dword(&button_freq[b]);
-		adsr_config(&voice->adsr,
-				100, 0, 10, 10,
-				ADSR_INFINITE, 10, 255, 192);
+		adsr_config(&voice->adsr, &voice_def);
 		voice_wf_set_triangle(&voice->wf, freq, 127);
 
 		synth.enable |= (1 << b);
