@@ -18,8 +18,8 @@ The library runs as a state machine.  Synthesis is performed completely using
 only integer arithmetic operations: specifically addition, subtraction, left
 and right shifts, and occasional multiplication.  This makes it suitable for
 smaller CPU cores such as Atmel's TinyAVR, ARM's Cortex M0+, lower-end TI
-MSP430 and other minimalist CPU cores that lack hardware multipliers or
-floating-point hardware.
+MSP430, [Microchip PIC12](https://github.com/lmartorella/atinysynth) and other
+minimalist CPU cores that lack hardware multipliers or floating-point hardware.
 
 The data types and sizes are optimised for 8-bit microcontroller hardware.
 
